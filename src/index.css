@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Cinzel", serif;
+  --font-serif: "Crimson Pro", Georgia, serif;
+
+  --color-bg-1: #0d1117;
+  --color-bg-2: #161b22;
+  --color-bg-3: #1c2330;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-text-primary: #e6edf3;
+  --color-text-muted: #7d8590;
+  --color-accent: #58a6ff;
+  --color-success: #3fb950;
+  --color-gold: #d29922;
+  --color-danger: #f85149;
+  --color-purple: #bc8cff;
+}
+
+:root {
+  --sq-light: #eeeed2;
+  --sq-dark: #769656;
+}
+
+body {
+  font-family: var(--font-serif);
+  background: var(--color-bg-1);
+  color: var(--color-text-primary);
+}
+
+.nav-underline-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-gold);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.25s ease;
+}
+
+.nav-item:hover .nav-underline-bar,
+.nav-item[data-active='true'] .nav-underline-bar {
+  transform: scaleX(1);
+}

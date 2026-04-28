@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "logo": "♟ Chess Replay",
+    "replay": "Replay",
+    "board": "Board",
+    "game": "Game",
+    "analysis": "Analysis",
+    "themes": "Themes",
+    "help": "Help",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "board": {
+    "title": "Board",
+    "subtitle": "Initial position",
+    "turn": "Turn",
+    "selection": "Selection",
+    "clickHint": "Click on a piece",
+    "promotion": "Promotion — choose a piece"
+  },
+  "piece": {
+    "P": "Pawn",
+    "R": "Rook",
+    "N": "Knight",
+    "B": "Bishop",
+    "Q": "Queen",
+    "K": "King"
+  },
+  "header": {
+    "title": "♟ Chess Replay",
+    "subtitle": "Scotch Game · April 24, 2026 · 10 min"
+  },
+  "player": {
+    "white": "White",
+    "black": "Black"
+  },
+  "controls": {
+    "statusInitial": "Initial position",
+    "statusFinal": "Bxd7 · 1-0 White wins",
+    "statusMove": "Move {{step}}/35 · {{who}} · {{san}}"
+  },
+  "movelist": {
+    "heading": "Moves",
+    "opening": "Scotch",
+    "footer": "35 half-moves"
+  },
+  "phase": {
+    "opening": "Opening",
+    "middle": "Middlegame",
+    "end": "Endgame"
+  },
+  "themes": {
+    "heading": "Board theme"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageLabel": "Choose interface language"
+  }
+}

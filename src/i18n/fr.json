@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "logo": "♟ Chess Replay",
+    "replay": "Replay",
+    "board": "Échiquier",
+    "game": "Partie",
+    "analysis": "Analyse",
+    "themes": "Thèmes",
+    "help": "Aide",
+    "settings": "Réglages",
+    "logout": "Déconnexion"
+  },
+  "board": {
+    "title": "Échiquier",
+    "subtitle": "Position initiale",
+    "turn": "Tour",
+    "selection": "Sélection",
+    "clickHint": "Cliquez sur une pièce",
+    "promotion": "Promotion — choisissez une pièce"
+  },
+  "piece": {
+    "P": "Pion",
+    "R": "Tour",
+    "N": "Cavalier",
+    "B": "Fou",
+    "Q": "Dame",
+    "K": "Roi"
+  },
+  "header": {
+    "title": "♟ Chess Replay",
+    "subtitle": "Scotch Game · 24 avril 2026 · 10 min"
+  },
+  "player": {
+    "white": "Blancs",
+    "black": "Noirs"
+  },
+  "controls": {
+    "statusInitial": "Position initiale",
+    "statusFinal": "Bxd7 · 1-0 Blancs gagnent",
+    "statusMove": "Coup {{step}}/35 · {{who}} · {{san}}"
+  },
+  "movelist": {
+    "heading": "Coups",
+    "opening": "Scotch",
+    "footer": "35 demi-coups"
+  },
+  "phase": {
+    "opening": "Ouverture",
+    "middle": "Milieu de jeu",
+    "end": "Fin de partie"
+  },
+  "themes": {
+    "heading": "Thème de l'échiquier"
+  },
+  "settings": {
+    "title": "Réglages",
+    "language": "Langue",
+    "languageLabel": "Choisir la langue d'interface"
+  }
+}
