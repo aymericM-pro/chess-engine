@@ -23,7 +23,10 @@ export const INITIAL_STATE: BoardGameState = {
     return [
       backRank.map((t) => `b${t}` as Piece),
       Array.from({ length: 8 }, (): Piece => "bP"),
-      empty(), empty(), empty(), empty(),
+      empty(),
+      empty(),
+      empty(),
+      empty(),
       Array.from({ length: 8 }, (): Piece => "wP"),
       backRank.map((t) => `w${t}` as Piece),
     ] as Board;
@@ -38,7 +41,12 @@ export const INITIAL_STATE: BoardGameState = {
 
 // Vérifie si une case est attaquée par une couleur donnée.
 // Pour le roi, on vérifie ses 8 cases directement (évite la récursion avec le roque).
-function isSquareAttacked(board: Board, r: number, c: number, byColor: Color): boolean {
+function isSquareAttacked(
+  board: Board,
+  r: number,
+  c: number,
+  byColor: Color,
+): boolean {
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const piece = board[row][col];
@@ -49,13 +57,24 @@ function isSquareAttacked(board: Board, r: number, c: number, byColor: Color): b
 
       if (type === "K") {
         moves = (
-          [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]] as [number,number][]
+          [
+            [-1, -1],
+            [-1, 0],
+            [-1, 1],
+            [0, -1],
+            [0, 1],
+            [1, -1],
+            [1, 0],
+            [1, 1],
+          ] as [number, number][]
         )
           .map(([dr, dc]) => [row + dr, col + dc] as [number, number])
           .filter(([nr, nc]) => nr >= 0 && nr <= 7 && nc >= 0 && nc <= 7);
       } else {
         const strategy = getMoveStrategy(type);
-        moves = strategy ? strategy.getLegalMoves(row, col, byColor, board) : [];
+        moves = strategy
+          ? strategy.getLegalMoves(row, col, byColor, board)
+          : [];
       }
 
       if (moves.some(([mr, mc]) => mr === r && mc === c)) return true;
@@ -76,7 +95,6 @@ function isInCheck(board: Board, color: Color): boolean {
   return false;
 }
 
-// Filtre les coups qui laisseraient le roi en échec.
 function filterLegal(
   moves: [number, number][],
   board: Board,
@@ -98,7 +116,9 @@ function computeLegalMoves(
   board: Board,
 ): [number, number][] {
   const strategy = getMoveStrategy(piece[1] as PieceType);
-  const raw = strategy ? strategy.getLegalMoves(r, c, piece[0] as Color, board) : [];
+  const raw = strategy
+    ? strategy.getLegalMoves(r, c, piece[0] as Color, board)
+    : [];
   return filterLegal(raw, board, [r, c], piece[0] as Color);
 }
 
@@ -166,7 +186,11 @@ function allMovesForColor(
 
 export type GameStatus = "playing" | "check" | "checkmate" | "stalemate";
 
-export function getGameStatus(board: Board, turn: Color, movedPieces: Set<string>): GameStatus {
+export function getGameStatus(
+  board: Board,
+  turn: Color,
+  movedPieces: Set<string>,
+): GameStatus {
   const hasAnyMove = allMovesForColor(board, turn, movedPieces).length > 0;
   const inCheck = isInCheck(board, turn);
   if (hasAnyMove) return inCheck ? "check" : "playing";
@@ -179,7 +203,9 @@ function buildNextState(
   pendingPromotion: BoardGameState["pendingPromotion"],
   movedPieces: Set<string>,
 ): BoardGameState {
-  const status = pendingPromotion ? "playing" : getGameStatus(next, newTurn, movedPieces);
+  const status = pendingPromotion
+    ? "playing"
+    : getGameStatus(next, newTurn, movedPieces);
   return {
     board: next,
     selected: null,
@@ -237,7 +263,8 @@ export function clickCell(
       }
     }
 
-    const isPromotion = (moving === "wP" && r === 0) || (moving === "bP" && r === 7);
+    const isPromotion =
+      (moving === "wP" && r === 0) || (moving === "bP" && r === 7);
     const nextTurn: Color = turn === "w" ? "b" : "w";
 
     return buildNextState(

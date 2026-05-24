@@ -1,8 +1,12 @@
 {
   "nav": {
     "logo": "♟ Chess Replay",
+    "play": "Play",
     "replay": "Replay",
     "board": "Board",
+    "live": "Live",
+    "history": "History",
+    "players": "Players",
     "game": "Game",
     "analysis": "Analysis",
     "themes": "Themes",
@@ -56,5 +60,28 @@
     "title": "Settings",
     "language": "Language",
     "languageLabel": "Choose interface language"
+  },
+  "live": {
+    "title": "Real-time",
+    "status_connected": "Connected",
+    "status_idle": "Offline",
+    "join_btn": "Send signal",
+    "instructions": "Open multiple tabs and click the button — every connected tab receives the signal in real time.",
+    "waiting": "No signal received yet…",
+    "signal_ok": "Signal received ✓",
+    "signal_past": "Previous signal"
+  },
+  "home": {
+    "hero_subtitle": "Replay, analyze and experience your chess games",
+    "hero_cta": "Get started",
+    "feature_replay_title": "Replay",
+    "feature_replay_desc": "Relive your games move by move with built-in analysis and keyboard navigation.",
+    "feature_replay_cta": "Open replay",
+    "feature_board_title": "Board",
+    "feature_board_desc": "Play an interactive game from the starting position with all official chess rules enforced.",
+    "feature_board_cta": "Play",
+    "feature_live_title": "Live",
+    "feature_live_desc": "Follow games in real time and receive moves instantly across all your open tabs.",
+    "feature_live_cta": "Watch live"
   }
 }

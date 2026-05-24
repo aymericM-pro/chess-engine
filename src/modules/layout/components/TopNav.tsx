@@ -1,30 +1,33 @@
-import { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router";
+import { useRef, useEffect, useState } from "react";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, Settings, User, Sun, Moon } from "lucide-react";
+import { IconButton } from "@/shared/components/IconButton";
 import { NotificationSidebar } from "./NotificationSidebar";
-
-const scrollTo = (id: string) => {
-  document
-    .getElementById(id)
-    ?.scrollIntoView({ behavior: "smooth", block: "center" });
-};
-
-const navLinks = [
-  { key: "replay", label: "nav.replay", path: "/replay" },
-  { key: "board", label: "nav.board", path: "/board" },
-];
-
-const UNREAD_COUNT = 2;
+import { useThemeStore } from "@/shared/theme/useThemeStore";
+import { useAuthStore } from "@/modules/auth/store/authStore";
+import { usePlayerStore } from "@/modules/players/store/playerStore";
+import { useNotificationStore } from "@/modules/notifications/notificationStore";
 
 export function TopNav() {
   const { t } = useTranslation();
-  const [active, setActive] = useState("game");
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const location = useLocation();
-  const isReplay = location.pathname === "/replay" || location.pathname === "/";
   const avatarRef = useRef<HTMLDivElement>(null);
+  const { theme, toggle } = useThemeStore();
+  const authUser = useAuthStore((s) => s.user);
+  const { player, fetchPlayer } = usePlayerStore();
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
+
+  useEffect(() => {
+    if (authUser?.id && !player) {
+      fetchPlayer(authUser.id).catch(() => undefined);
+    }
+  }, [authUser?.id]);
+
+  const initials = ((authUser?.firstName?.[0] ?? '') + (authUser?.lastName?.[0] ?? authUser?.username?.[0] ?? '')).toUpperCase() || '?';
+  const displayName = player?.username ?? authUser?.username ?? 'Profil';
+  const displayElo  = player?.elo ?? null;
 
   useEffect(() => {
     if (!avatarOpen) return;
@@ -40,108 +43,142 @@ export function TopNav() {
   return (
     <>
       <nav
-        className="sticky top-0 z-[100] w-full border-b border-border flex items-center justify-between px-6 h-12"
+        className="sticky top-0 z-[100] w-full flex items-center justify-between px-10"
         style={{
-          background: "rgba(13,17,23,0.85)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
+          height: 64,
+          borderBottom: "1px solid var(--color-border)",
+          background: theme === "dark" ? "rgba(28,28,34,0.97)" : "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
         }}
       >
-        <Link
-          to="/replay"
-          className="font-display text-[0.8rem] font-bold tracking-[0.15em] uppercase no-underline"
-          style={{
-            background: "linear-gradient(135deg, #e6d5a0, #c8a95a)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
-        >
-          {t("nav.logo")}
+        {/* Logo */}
+        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              border: "1.5px solid var(--color-gold)",
+              borderRadius: 8,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 20,
+              color: "var(--color-gold)",
+              flexShrink: 0,
+            }}
+          >
+            ♔
+          </div>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: "0.06em", color: "var(--color-gold)", lineHeight: 1.2 }}>
+              CHESS<span style={{ color: "var(--color-text-primary)", fontWeight: 400 }}>MASTER</span>
+            </div>
+            <div style={{ fontSize: 9, color: "var(--color-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              Jouez en ligne
+            </div>
+          </div>
         </Link>
 
-        <div className="flex items-center gap-1">
-          {navLinks.map((link) => {
-            const isActive = location.pathname === link.path;
-            return (
-              <Link
-                key={link.key}
-                to={link.path}
-                className={`nav-item font-display text-[0.58rem] font-semibold tracking-[0.1em] uppercase py-[6px] px-3 no-underline transition-colors duration-150 ${
-                  isActive ? "text-gold" : "text-text-muted hover:text-gold"
-                }`}
-              >
-                <span className="relative pb-[3px]">
-                  {t(link.label)}
-                  <span className="nav-underline-bar" />
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-
+        {/* Right zone */}
         <div className="flex items-center gap-3">
-          {/* Notification bell */}
-          <button
-            onClick={() => setNotifOpen(true)}
-            className="relative text-text-muted hover:text-text-primary transition-colors border-none cursor-pointer p-1"
+          {/* Theme toggle */}
+          <IconButton
+            onClick={toggle}
+            title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
           >
-            <Bell size={15} />
-            {UNREAD_COUNT > 0 && (
-              <span
-                className="absolute top-0 right-0 w-[7px] h-[7px] rounded-full bg-danger border border-bg-1"
-                style={{ transform: "translate(2px, -2px)" }}
-              />
-            )}
-          </button>
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </IconButton>
+
+          {/* Notification bell */}
+          <IconButton onClick={() => setNotifOpen(true)} badge={unreadCount}>
+            <Bell size={16} />
+          </IconButton>
 
           {/* Avatar */}
           <div ref={avatarRef} className="relative">
             <button
               onClick={() => setAvatarOpen((o) => !o)}
-              className="border-none cursor-pointer p-0 rounded-full transition-opacity duration-150 hover:opacity-80"
+              className="border-none cursor-pointer p-0 rounded-full hover:opacity-80 transition-opacity"
+              style={{ background: "none" }}
             >
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center font-display font-bold text-[0.55rem] tracking-[0.06em] flex-shrink-0"
+                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[0.6rem] tracking-[0.06em] flex-shrink-0"
                 style={{
                   background: "linear-gradient(135deg, #e6d5a0, #c8a95a)",
                   color: "#0d1117",
                 }}
               >
-                WL
+                {initials}
               </div>
             </button>
 
             {avatarOpen && (
               <div
-                className="absolute right-0 top-full mt-2 w-48 rounded-xl overflow-hidden z-[300]"
+                className="absolute right-0 top-full mt-2 rounded-xl z-[300]"
                 style={{
-                  background: "var(--color-bg-3)",
+                  background: "var(--color-bg-2)",
                   border: "1px solid var(--color-border)",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+                  boxShadow: theme === "dark" ? "0 12px 32px rgba(0,0,0,0.5)" : "0 8px 24px rgba(0,0,0,0.12)",
+                  width: 192,
                 }}
               >
-                <div
-                  className="px-4 py-3"
-                  style={{ borderBottom: "1px solid var(--color-border)" }}
-                >
-                  <p className="font-display font-semibold text-[0.72rem] tracking-[0.06em] text-text-primary">
-                    Wynn4Life
-                  </p>
-                  <p className="font-serif italic text-[0.7rem] text-text-muted mt-[2px]">
-                    249 ELO · Blancs
-                  </p>
+                {/* User info */}
+                <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #e6d5a0, #c8a95a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#0d1117", letterSpacing: "0.04em", flexShrink: 0 }}>
+                    {initials}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontWeight: 600, fontSize: 13, color: "var(--color-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {displayName}
+                    </p>
+                    {displayElo !== null && (
+                      <p style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: 1 }}>{displayElo} ELO</p>
+                    )}
+                  </div>
                 </div>
-                <div className="px-2 py-2">
-                  <button
-                    className="w-full flex items-center gap-2 px-3 py-[7px] rounded-lg text-left border-none cursor-pointer text-danger hover:bg-[rgba(248,81,73,0.1)] transition-colors"
+
+                {/* Links */}
+                <div style={{ paddingTop: 4, paddingBottom: 4 }}>
+                  {[
+                    { icon: <User size={13} />, label: "Profil", to: "/profile" },
+                    { icon: <Settings size={13} />, label: t("nav.settings"), to: "/settings" },
+                  ].map(({ icon, label, to }) => (
+                    <Link
+                      key={to}
+                      to={to}
+                      onClick={() => setAvatarOpen(false)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 9,
+                        padding: "8px 16px", textDecoration: "none",
+                        fontSize: 13, color: "var(--color-text-primary)",
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-bg-3)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                    >
+                      <span style={{ color: "var(--color-text-muted)" }}>{icon}</span>
+                      {label}
+                    </Link>
+                  ))}
+
+                  <div style={{ height: 1, background: "var(--color-border)", margin: "4px 0" }} />
+
+                  <Link
+                    to="/login"
                     onClick={() => setAvatarOpen(false)}
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", gap: 9,
+                      padding: "8px 16px", textDecoration: "none",
+                      fontSize: 13, fontWeight: 500, color: "var(--color-danger)",
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.08)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                   >
                     <LogOut size={13} />
-                    <span className="font-display text-[0.62rem] font-semibold tracking-[0.08em] uppercase">
-                      {t("nav.logout")}
-                    </span>
-                  </button>
+                    {t("nav.logout")}
+                  </Link>
                 </div>
               </div>
             )}
@@ -149,10 +186,7 @@ export function TopNav() {
         </div>
       </nav>
 
-      <NotificationSidebar
-        open={notifOpen}
-        onClose={() => setNotifOpen(false)}
-      />
+      <NotificationSidebar open={notifOpen} onClose={() => setNotifOpen(false)} />
     </>
   );
 }

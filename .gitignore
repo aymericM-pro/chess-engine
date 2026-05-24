@@ -2,3 +2,7 @@ node_modules/
 dist/
 .vscode/
 *.local
+.scannerwork/
+.sonar_token
+playwright-report/
+test-results/

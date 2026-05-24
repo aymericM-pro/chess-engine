@@ -1,46 +1,182 @@
 @import "tailwindcss";
 
 @theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-display: "Cinzel", serif;
   --font-serif: "Crimson Pro", Georgia, serif;
 
-  --color-bg-1: #0d1117;
-  --color-bg-2: #161b22;
-  --color-bg-3: #1c2330;
-  --color-border: rgba(255, 255, 255, 0.07);
-  --color-text-primary: #e6edf3;
-  --color-text-muted: #7d8590;
-  --color-accent: #58a6ff;
+  --color-bg-1: #14161a;
+  --color-bg-2: #1e2128;
+  --color-bg-3: #272c35;
+  --color-border: #30353f;
+  --color-text-primary: #f0f2f5;
+  --color-text-muted: #8b92a0;
+  --color-faint: #454d5c;
+  --color-accent: #c9a96e;
+  --color-accent-lt: #dfc08a;
+  --color-accent-dk: #a8834a;
   --color-success: #3fb950;
-  --color-gold: #d29922;
+  --color-gold: #c9a96e;
   --color-danger: #f85149;
   --color-purple: #bc8cff;
 }
 
+/* ── Dark theme (default) ── */
 :root {
   --sq-light: #eeeed2;
   --sq-dark: #769656;
+
+  --color-bg-1: #14161a;
+  --color-bg-2: #1e2128;
+  --color-bg-3: #272c35;
+  --color-border: #30353f;
+  --color-text-primary: #f0f2f5;
+  --color-text-muted: #8b92a0;
+  --color-faint: #454d5c;
+  --color-gold: #c9a96e;
+  --color-accent: #c9a96e;
+  --color-accent-lt: #dfc08a;
+  --color-accent-dk: #a8834a;
+  --color-success: #3fb950;
+  --color-danger: #f85149;
+  --color-purple: #bc8cff;
+  --color-emphasis: #f0e2c8;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] {
+  --color-bg-1: #f4f6f9;
+  --color-bg-2: #ffffff;
+  --color-bg-3: #eaedf2;
+  --color-border: #d1d7e0;
+  --color-text-primary: #0f1117;
+  --color-text-muted: #5c6472;
+  --color-faint: #a0a8b4;
+  --color-gold: #a06820;
+  --color-accent: #a06820;
+  --color-accent-lt: #b87d30;
+  --color-accent-dk: #7a4e14;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-purple: #7c3aed;
+  --color-emphasis: #6b420e;
 }
 
 body {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   background: var(--color-bg-1);
   color: var(--color-text-primary);
+  line-height: 1.6;
+  transition: background 0.2s, color 0.2s;
 }
 
-.nav-underline-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--color-gold);
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.25s ease;
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.auth-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-1);
+  position: relative;
+  justify-content: center;
 }
 
-.nav-item:hover .nav-underline-bar,
-.nav-item[data-active='true'] .nav-underline-bar {
-  transform: scaleX(1);
+.auth-side {
+  width: 580px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 64px 72px;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-form-panel {
+  width: 540px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 52px 60px;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.forgot-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg-1);
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  box-sizing: border-box;
+}
+
+.forgot-panel {
+  width: min(420px, 100%);
+}
+
+.forgot-card {
+  background: #111118;
+  border: 1px solid #1e1e28;
+  border-radius: 16px;
+  padding: 36px;
+}
+
+@media (max-width: 980px) {
+  .auth-shell {
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 100svh;
+  }
+
+  .auth-side {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 28px 24px 10px;
+  }
+
+  .auth-hero {
+    display: none;
+  }
+
+  .auth-side > p {
+    display: none;
+  }
+
+  .auth-form-panel {
+    width: 100%;
+    max-width: 560px;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 24px;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-side {
+    padding: 22px 18px 6px;
+  }
+
+  .auth-form-panel {
+    padding: 18px;
+  }
+
+  .forgot-shell {
+    align-items: flex-start;
+    padding: 24px 18px;
+  }
+
+  .forgot-card {
+    padding: 28px 22px;
+  }
 }

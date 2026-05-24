@@ -1,8 +1,12 @@
 {
   "nav": {
     "logo": "♟ Chess Replay",
+    "play": "Jouer",
     "replay": "Replay",
     "board": "Échiquier",
+    "live": "Temps réel",
+    "history": "Historique",
+    "players": "Joueurs",
     "game": "Partie",
     "analysis": "Analyse",
     "themes": "Thèmes",
@@ -56,5 +60,28 @@
     "title": "Réglages",
     "language": "Langue",
     "languageLabel": "Choisir la langue d'interface"
+  },
+  "live": {
+    "title": "Temps réel",
+    "status_connected": "Connecté",
+    "status_idle": "Hors ligne",
+    "join_btn": "Envoyer un signal",
+    "instructions": "Ouvre plusieurs onglets et clique le bouton — tous les onglets connectés reçoivent le signal en temps réel.",
+    "waiting": "Aucun signal reçu pour l'instant…",
+    "signal_ok": "Signal reçu ✓",
+    "signal_past": "Signal précédent"
+  },
+  "home": {
+    "hero_subtitle": "Rejouez, analysez et vivez vos parties d'échecs",
+    "hero_cta": "Commencer",
+    "feature_replay_title": "Replay",
+    "feature_replay_desc": "Revivez vos parties coup par coup avec analyse intégrée et navigation au clavier.",
+    "feature_replay_cta": "Ouvrir le replay",
+    "feature_board_title": "Échiquier",
+    "feature_board_desc": "Jouez une partie interactive depuis la position initiale avec toutes les règles officielles.",
+    "feature_board_cta": "Jouer",
+    "feature_live_title": "Temps réel",
+    "feature_live_desc": "Suivez des parties en direct et recevez les coups instantanément.",
+    "feature_live_cta": "Voir en direct"
   }
 }

@@ -1,44 +1,22 @@
-import { X, Trophy, Swords, Star } from 'lucide-react'
+import { Swords, Trophy, X } from 'lucide-react'
+import { useNavigate } from 'react-router'
+import { useNotificationStore, type AppNotification } from '@/modules/notifications/notificationStore'
+import { notificationsApi } from '@/shared/api/notifications.api'
+import { IconTile } from '@/shared/components/IconTile'
 
 interface Props {
   open: boolean
   onClose: () => void
 }
 
-const notifications = [
-  {
-    id: 1,
-    icon: Trophy,
-    iconColor: 'text-gold',
-    iconBg: 'bg-[rgba(210,153,34,0.12)]',
-    title: 'Partie analysée',
-    desc: 'Votre partie contre Votybe a été analysée avec succès.',
-    time: 'Il y a 2 min',
-    unread: true,
-  },
-  {
-    id: 2,
-    icon: Swords,
-    iconColor: 'text-accent',
-    iconBg: 'bg-[rgba(88,166,255,0.12)]',
-    title: 'Défi reçu',
-    desc: 'Votybe vous défie pour une revanche en 10 min.',
-    time: 'Il y a 15 min',
-    unread: true,
-  },
-  {
-    id: 3,
-    icon: Star,
-    iconColor: 'text-success',
-    iconBg: 'bg-[rgba(63,185,80,0.12)]',
-    title: 'Nouveau record',
-    desc: 'Vous avez atteint 250 ELO — nouveau record personnel.',
-    time: 'Il y a 1 h',
-    unread: false,
-  },
-]
-
 export function NotificationSidebar({ open, onClose }: Props) {
+  const notifications = useNotificationStore((state) => state.notifications)
+  const markAllAsRead = useNotificationStore((state) => state.markAllAsRead)
+  const handleMarkAllAsRead = async () => {
+    markAllAsRead()
+    await notificationsApi.markAllAsRead().catch(() => undefined)
+  }
+
   return (
     <>
       <div
@@ -48,62 +26,96 @@ export function NotificationSidebar({ open, onClose }: Props) {
       />
 
       <div
-        className={`fixed right-0 top-0 bottom-0 z-[200] w-80 flex flex-col transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed right-0 top-0 bottom-0 z-[200] flex w-[min(460px,100vw)] flex-col transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
         style={{ background: 'var(--color-bg-2)', borderLeft: '1px solid var(--color-border)' }}
       >
         <div
-          className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+          className="flex flex-shrink-0 items-center justify-between px-7 py-5"
           style={{ borderBottom: '1px solid var(--color-border)' }}
         >
-          <span className="font-display text-[0.65rem] font-semibold tracking-[0.14em] uppercase text-text-primary">
+          <span className="font-display text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-text-primary">
             Notifications
           </span>
           <button
             onClick={onClose}
-            className="text-text-muted hover:text-text-primary transition-colors border-none cursor-pointer p-1 -mr-1"
+            className="-mr-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#7d8490] transition-[background,color] duration-150 hover:bg-black/[0.18] hover:text-[#c6ccd5]"
           >
-            <X size={15} />
+            <X size={18} />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {notifications.map((n) => {
-            const Icon = n.icon
-            return (
-              <div
-                key={n.id}
-                className="flex gap-3 px-5 py-4 cursor-pointer hover:bg-white/[0.03] transition-colors"
-                style={{ borderBottom: '1px solid var(--color-border)' }}
-              >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${n.iconBg}`}>
-                  <Icon size={14} className={n.iconColor} />
-                </div>
-                <div className="flex flex-col gap-[3px] flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-display text-[0.65rem] font-semibold tracking-[0.06em] text-text-primary truncate">
-                      {n.title}
-                    </span>
-                    {n.unread && (
-                      <span className="w-[6px] h-[6px] rounded-full bg-accent flex-shrink-0" />
-                    )}
-                  </div>
-                  <p className="font-serif text-[0.78rem] text-text-muted leading-[1.5]">{n.desc}</p>
-                  <span className="font-serif text-[0.68rem] text-text-muted italic">{n.time}</span>
-                </div>
-              </div>
-            )
-          })}
+          {notifications.length === 0 ? (
+            <div className="px-5 py-8 text-sm text-[var(--color-text-muted)]">
+              Aucune notification pour le moment.
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <NotificationItem key={notification.id} notification={notification} />
+            ))
+          )}
         </div>
 
         <div
-          className="px-5 py-3 flex-shrink-0"
+          className="flex-shrink-0 px-7 py-4"
           style={{ borderTop: '1px solid var(--color-border)' }}
         >
-          <button className="font-display text-[0.58rem] font-semibold tracking-[0.1em] uppercase text-text-muted hover:text-accent transition-colors border-none cursor-pointer">
+          <button
+            onClick={handleMarkAllAsRead}
+            className="font-display text-[0.58rem] font-semibold tracking-[0.1em] uppercase text-text-muted hover:text-accent transition-colors border-none cursor-pointer"
+          >
             Tout marquer comme lu
           </button>
         </div>
       </div>
     </>
   )
+}
+
+function NotificationItem({ notification }: { notification: AppNotification }) {
+  const Icon = notification.kind === 'game' ? Swords : Trophy
+  const navigate = useNavigate()
+  const gameId = typeof notification.data?.gameId === 'string' ? notification.data.gameId : null
+
+  return (
+    <div
+      className="flex cursor-pointer gap-4 px-7 py-4 transition-colors hover:bg-white/[0.03]"
+      style={{ borderBottom: '1px solid var(--color-border)' }}
+      onClick={() => {
+        if (gameId) navigate(`/play?game=${gameId}`)
+      }}
+    >
+      <IconTile icon={Icon} tone="gold" size="md" />
+      <div className="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="font-display truncate text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[var(--color-text-primary)]">
+            {notification.title}
+          </span>
+          {notification.unread && (
+            <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[var(--color-gold)]" />
+          )}
+        </div>
+        <p className="line-clamp-2 font-serif text-[0.86rem] font-semibold leading-snug text-[var(--color-text-muted)]">
+          {notification.description}
+        </p>
+        <span className="font-serif text-[0.76rem] font-semibold italic text-[var(--color-text-muted)]">
+          {formatRelativeTime(notification.createdAt)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function formatRelativeTime(value: string) {
+  const diffMs = Math.max(0, Date.now() - new Date(value).getTime())
+  const diffMinutes = Math.floor(diffMs / 60000)
+
+  if (diffMinutes < 1) return "À l'instant"
+  if (diffMinutes < 60) return `Il y a ${diffMinutes} min`
+
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24) return `Il y a ${diffHours} h`
+
+  const diffDays = Math.floor(diffHours / 24)
+  return `Il y a ${diffDays} j`
 }

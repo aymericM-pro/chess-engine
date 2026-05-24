@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { PieceSVG } from "@/shared/pieces/PieceSVG";
 import type { Color, PieceType } from "@/shared/types/chess";
 import { applyMoves } from "../engine/boardEngine";
-import { MOVES } from "../data/moves";
 import { useReplayStore } from "../store/replayStore";
 import { idx } from "../engine/boardEngine";
+import { useThemeStore } from "@/shared/theme/useThemeStore";
 
 function getSqSize() {
   const sidebar = window.innerWidth > 760 ? 240 : 0;
@@ -13,7 +13,9 @@ function getSqSize() {
 
 export function ChessBoard() {
   const step = useReplayStore((s) => s.step);
+  const moves = useReplayStore((s) => s.moves);
   const [sqSize, setSqSize] = useState(getSqSize);
+  const { theme } = useThemeStore();
 
   useEffect(() => {
     const handleResize = () => setSqSize(getSqSize());
@@ -21,8 +23,8 @@ export function ChessBoard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const board = applyMoves(MOVES, step);
-  const lastMove = step > 0 ? MOVES[step - 1] : null;
+  const board = applyMoves(moves, step);
+  const lastMove = step > 0 ? moves[step - 1] : null;
   const fromIdx = lastMove ? idx(lastMove.f[0], lastMove.f[1]) : -1;
   const toIdx = lastMove ? idx(lastMove.t[0], lastMove.t[1]) : -1;
 
@@ -67,8 +69,9 @@ export function ChessBoard() {
     <div
       className="rounded-[4px] overflow-hidden"
       style={{
-        boxShadow:
-          "0 0 0 1px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.6), 0 20px 50px rgba(0,0,0,0.3)",
+        boxShadow: theme === "dark"
+          ? "0 0 0 1px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.6), 0 20px 50px rgba(0,0,0,0.3)"
+          : "0 0 0 1px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.10), 0 12px 28px rgba(0,0,0,0.07)",
       }}
     >
       <div

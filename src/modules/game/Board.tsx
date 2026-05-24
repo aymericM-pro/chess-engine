@@ -6,7 +6,6 @@ import { BoardHeader } from "./components/BoardHeader";
 import { PlayerBar } from "@/modules/replay/components/PlayerBar";
 import { clickCell, promote, INITIAL_STATE } from "./engine/boardGame";
 import type { PromotionPieceType } from "./engine/boardGame";
-
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
 const labelStyle: React.CSSProperties = {
@@ -22,6 +21,8 @@ export function Board() {
   const { t } = useTranslation();
   const [gameState, setGameState] = useState(INITIAL_STATE);
   const { board, selected, legalMoves, turn, inCheck, pendingPromotion } = gameState;
+
+  const isMyTurn = !pendingPromotion;
 
   const toAlgebraic = (row: number, col: number) => `${FILES[col]}${8 - row}`;
 
@@ -118,7 +119,10 @@ export function Board() {
                                 ? "#f0d9b5"
                                 : "#b58863",
                         }}
-                        onClick={() => setGameState((s) => clickCell(s, r, c))}
+                        onClick={() => {
+                          if (!isMyTurn) return;
+                          setGameState((s) => clickCell(s, r, c));
+                        }}
                       >
                         {piece !== null && (
                           <PieceSVG

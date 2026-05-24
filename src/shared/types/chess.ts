@@ -32,3 +32,17 @@ export interface BoardTheme {
   light: string;
   dark: string;
 }
+
+export type GameResult = '1-0' | '0-1' | '1/2-1/2'
+
+export interface GameRecord {
+  id: string
+  date: string
+  white: { name: string; elo: number }
+  black: { name: string; elo: number }
+  result: GameResult
+  opening: string
+  timeControl: string
+  moves: Move[]
+  analysis: AnalysisEntry[]
+}

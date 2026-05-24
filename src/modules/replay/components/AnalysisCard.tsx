@@ -2,6 +2,7 @@ import { useReplayStore } from '../store/replayStore'
 import { ANALYSIS } from '../data/analysis'
 import { Tag } from '@/shared/components/Tag'
 import type { Phase, TagType } from '@/shared/types/chess'
+import { useThemeStore } from '@/shared/theme/useThemeStore'
 
 const phaseClasses: Record<Phase, string> = {
   opening: 'bg-[rgba(118,150,86,0.14)] border border-[rgba(118,150,86,0.28)] text-success',
@@ -18,6 +19,7 @@ const phaseLabel: Record<Phase, string> = {
 export function AnalysisCard() {
   const step = useReplayStore((s) => s.step)
   const entry = ANALYSIS[Math.min(step, ANALYSIS.length - 1)]
+  const { theme } = useThemeStore()
 
   return (
     <div
@@ -31,7 +33,9 @@ export function AnalysisCard() {
             className="font-display font-bold tracking-[0.05em]"
             style={{
               fontSize: '1.55rem',
-              background: 'linear-gradient(135deg,#f5ead6,#d4a84b)',
+              background: theme === 'dark'
+                ? 'linear-gradient(135deg,#f5ead6,#d4a84b)'
+                : 'linear-gradient(135deg,#a8731e,#7c5010)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -51,7 +55,7 @@ export function AnalysisCard() {
       </div>
 
       <p
-        className="font-serif text-[1.18rem] leading-[1.78] text-text-primary opacity-93 tracking-[0.01em] [&_strong]:text-[#f5ead6] [&_strong]:font-semibold [&_strong]:not-italic"
+        className="font-serif text-[1.18rem] leading-[1.78] text-text-primary opacity-93 tracking-[0.01em] [&_strong]:text-[var(--color-emphasis)] [&_strong]:font-semibold [&_strong]:not-italic"
         dangerouslySetInnerHTML={{ __html: entry.text }}
       />
 

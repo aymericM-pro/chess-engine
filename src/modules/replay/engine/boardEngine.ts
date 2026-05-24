@@ -1,11 +1,13 @@
-import type { Board, Move, Piece } from '@/shared/types/chess'
+import type { Move, Piece } from '@/shared/types/chess'
+
+type ReplayBoard = (Piece | null)[]
 
 export function idx(col: number, row: number): number {
   return row * 8 + col
 }
 
-export function startPos(): Board {
-  const b: Board = new Array(64).fill(null)
+export function startPos(): ReplayBoard {
+  const b: ReplayBoard = new Array(64).fill(null)
   const backRank: Piece[] = ['wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR']
   backRank.forEach((p, c) => (b[idx(c, 7)] = p))
   for (let c = 0; c < 8; c++) b[idx(c, 6)] = 'wP'
@@ -15,7 +17,7 @@ export function startPos(): Board {
   return b
 }
 
-export function applyMoves(moves: Move[], n: number): Board {
+export function applyMoves(moves: Move[], n: number): ReplayBoard {
   const clamped = Math.max(0, Math.min(n, moves.length))
   const b = startPos()
   for (let i = 0; i < clamped; i++) {

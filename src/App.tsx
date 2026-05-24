@@ -1,16 +1,27 @@
-import { Outlet } from 'react-router'
+import { Outlet, useLocation } from 'react-router'
 import { TopNav } from './modules/layout/components/TopNav'
 import { PageBackground } from './modules/layout/components/PageBackground'
+import { MainSidebar } from './modules/layout/components/MainSidebar'
+import { RealtimeNotifications } from './modules/notifications/RealtimeNotifications'
 
 export default function App() {
+  const location = useLocation()
+  const showSidebar = location.pathname !== '/'
+
   return (
     <div
-      className="min-h-screen flex flex-col items-center bg-bg-1 text-text-primary overflow-x-hidden"
-      style={{ paddingBottom: 40 }}
+      className="min-h-screen flex flex-col overflow-x-hidden"
+      style={{ background: 'var(--color-bg-1)', color: 'var(--color-text-primary)', transition: 'background 0.2s, color 0.2s' }}
     >
       <PageBackground />
+      <RealtimeNotifications />
       <TopNav />
-      <Outlet />
+      <div className="flex min-h-[calc(100vh-64px)] w-full flex-1 flex-col lg:flex-row">
+        {showSidebar && <MainSidebar />}
+        <main className="flex w-full min-w-0 flex-1 flex-col">
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }
