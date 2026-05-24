@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { Fragment, useState, useEffect, useRef, useCallback } from "react";
 import {
   X, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Loader2,
 } from "lucide-react";
@@ -131,27 +131,21 @@ function MovesList({ moves, step, onGoTo }: { moves: GameMove[]; step: number; o
   }, [step]);
 
   const pairs: { n: number; white?: { move: GameMove; step: number }; black?: { move: GameMove; step: number } }[] = [];
-  let engineStep = 0;
-  for (const m of moves) {
-    engineStep++;
-    if (m.color === "white") {
-      pairs.push({ n: m.moveNumber, white: { move: m, step: engineStep } });
-    } else {
-      const last = pairs[pairs.length - 1];
-      if (last && last.n === m.moveNumber && last.white && !last.black) {
-        last.black = { move: m, step: engineStep };
-      } else {
-        pairs.push({ n: m.moveNumber, black: { move: m, step: engineStep } });
-      }
-    }
-  }
+  moves.forEach((move, index) => {
+    const stepNumber = index + 1;
+    const pairIndex = Math.floor(index / 2);
+    const pair = pairs[pairIndex] ?? { n: pairIndex + 1 };
+    if (move.color === "white") pair.white = { move, step: stepNumber };
+    else pair.black = { move, step: stepNumber };
+    pairs[pairIndex] = pair;
+  });
 
   if (pairs.length === 0) {
     return <p style={{ fontSize: 13, color: "var(--color-text-muted)", fontStyle: "italic", padding: "16px 0" }}>Aucun coup enregistré.</p>;
   }
 
   const moveCell = (entry: { move: GameMove; step: number } | undefined, key: string) => {
-    if (!entry) return <div key={key} style={{ padding: "5px 10px" }} />;
+    if (!entry) return <div key={key} style={{ minHeight: 34, padding: "7px 10px" }} />;
     const active = step === entry.step;
     return (
       <div
@@ -159,8 +153,11 @@ function MovesList({ moves, step, onGoTo }: { moves: GameMove[]; step: number; o
         ref={active ? activeRef : undefined}
         onClick={() => onGoTo(entry.step)}
         style={{
-          padding: "5px 10px", borderRadius: 5, cursor: "pointer", fontFamily: "monospace",
-          fontSize: 13, fontWeight: active ? 700 : 400,
+          minHeight: 34,
+          display: "flex",
+          alignItems: "center",
+          padding: "7px 10px", borderRadius: 7, cursor: "pointer", fontFamily: "monospace",
+          fontSize: 13, fontWeight: active ? 700 : 600,
           color: active ? "var(--color-gold)" : "var(--color-text-primary)",
           background: active ? "rgba(201,169,110,0.12)" : "none",
           transition: "background 0.12s",
@@ -175,16 +172,16 @@ function MovesList({ moves, step, onGoTo }: { moves: GameMove[]; step: number; o
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "28px 1fr 1fr", rowGap: 2 }}>
-      <div style={{ fontSize: 10, color: "var(--color-text-muted)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", padding: "4px 6px 8px" }}>#</div>
-      <div style={{ fontSize: 10, color: "var(--color-text-muted)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", padding: "4px 10px 8px" }}>Blancs</div>
-      <div style={{ fontSize: 10, color: "var(--color-text-muted)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", padding: "4px 10px 8px" }}>Noirs</div>
+    <div style={{ display: "grid", gridTemplateColumns: "34px minmax(120px, 1fr) minmax(120px, 1fr)", columnGap: 8, rowGap: 4 }}>
+      <div style={{ position: "sticky", top: -14, zIndex: 2, background: "var(--color-bg-1)", fontSize: 10, color: "var(--color-text-muted)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", padding: "4px 6px 10px" }}>#</div>
+      <div style={{ position: "sticky", top: -14, zIndex: 2, background: "var(--color-bg-1)", fontSize: 10, color: "var(--color-text-muted)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", padding: "4px 10px 10px" }}>Blancs</div>
+      <div style={{ position: "sticky", top: -14, zIndex: 2, background: "var(--color-bg-1)", fontSize: 10, color: "var(--color-text-muted)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", padding: "4px 10px 10px" }}>Noirs</div>
       {pairs.map(({ n, white, black }) => (
-        <>
-          <div key={`n-${n}`} style={{ display: "flex", alignItems: "center", padding: "4px 6px", fontSize: 11, color: "var(--color-text-muted)" }}>{n}.</div>
+        <Fragment key={n}>
+          <div style={{ minHeight: 34, display: "flex", alignItems: "center", padding: "7px 6px", fontSize: 11, fontWeight: 700, color: "var(--color-text-muted)" }}>{n}.</div>
           {moveCell(white, `w-${n}`)}
           {moveCell(black, `b-${n}`)}
-        </>
+        </Fragment>
       ))}
     </div>
   );
@@ -268,7 +265,7 @@ export function GameReplayDialog({ game: initialGame, authUserId, onClose }: Pro
         onClick={(e) => e.stopPropagation()}
         style={{
           background: "var(--color-bg-1)", border: "1px solid var(--color-border)",
-          borderRadius: 16, width: "100%", maxWidth: 1100,
+          borderRadius: 16, width: "100%", maxWidth: 1160,
           height: "90vh", display: "flex", flexDirection: "column",
           boxShadow: "0 32px 80px rgba(0,0,0,0.7)", overflow: "hidden",
         }}
@@ -296,7 +293,7 @@ export function GameReplayDialog({ game: initialGame, authUserId, onClose }: Pro
         {/* Body */}
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
           {/* Left — board */}
-          <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", padding: "20px 16px 20px 20px", borderRight: "1px solid var(--color-border)" }}>
+          <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", padding: "20px 18px 20px 22px", borderRight: "1px solid var(--color-border)", background: "linear-gradient(180deg, rgba(255,255,255,0.015), transparent)" }}>
             {/* Rank labels + board */}
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div style={{ display: "flex", flexDirection: "column", height: sqSize * 8 }}>
@@ -323,23 +320,23 @@ export function GameReplayDialog({ game: initialGame, authUserId, onClose }: Pro
           </div>
 
           {/* Right — moves list */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ flex: "1 1 420px", minWidth: 390, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             {/* Stats strip */}
-            <div style={{ display: "flex", gap: 28, padding: "12px 20px", borderBottom: "1px solid var(--color-border)", background: "var(--color-bg-2)", flexShrink: 0 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 14, padding: "14px 20px", borderBottom: "1px solid var(--color-border)", background: "var(--color-bg-2)", flexShrink: 0 }}>
               {[
                 { label: "Cadence", value: game.timeControl.charAt(0).toUpperCase() + game.timeControl.slice(1) },
                 { label: "Coups",   value: String(game.moveCount) },
                 { label: "Temps",   value: `${Math.floor(game.timeLimit / 60)}min${game.increment ? ` +${game.increment}s` : ""}` },
                 { label: "Statut",  value: game.status === "finished" ? "Terminée" : game.status === "active" ? "En cours" : "En attente" },
               ].map(({ label, value }) => (
-                <div key={label}>
+                <div key={label} style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 10, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{value}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</div>
                 </div>
               ))}
             </div>
             {/* Moves */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "14px 18px 16px" }}>
               {loadingMoves ? (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", gap: 10, color: "var(--color-text-muted)" }}>
                   <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />

@@ -2,7 +2,7 @@ import { Outlet, useLocation } from 'react-router'
 import { TopNav } from './modules/layout/components/TopNav'
 import { PageBackground } from './modules/layout/components/PageBackground'
 import { MainSidebar } from './modules/layout/components/MainSidebar'
-import { RealtimeNotifications } from './modules/notifications/RealtimeNotifications'
+import { GameInviteSocket } from './modules/gameInvites/GameInviteSocket'
 
 export default function App() {
   const location = useLocation()
@@ -14,7 +14,7 @@ export default function App() {
       style={{ background: 'var(--color-bg-1)', color: 'var(--color-text-primary)', transition: 'background 0.2s, color 0.2s' }}
     >
       <PageBackground />
-      <RealtimeNotifications />
+      <GameInviteSocket />
       <TopNav />
       <div className="flex min-h-[calc(100vh-64px)] w-full flex-1 flex-col lg:flex-row">
         {showSidebar && <MainSidebar />}

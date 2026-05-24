@@ -5,6 +5,7 @@ export const gamesApi = {
   getAll:      ()                       => api.get<GameResponseDto[]>('/api/games'),
   getOne:      (id: string)             => api.get<GameResponseDto>(`/api/games/${id}`),
   create:      (body: CreateGameBody)   => api.post<GameResponseDto>('/api/games', body),
+  acceptInvite: (id: string)            => api.post<GameResponseDto>(`/api/games/${id}/accept`, {}),
   playMove:    (id: string, body: PlayMoveBody) => api.post<GameResponseDto>(`/api/games/${id}/moves`, body),
   simulate:    (id: string)             => api.post<GameResponseDto>(`/api/games/${id}/simulate`, {}),
   resign:      (id: string)             => api.post<GameResponseDto>(`/api/games/${id}/resign`, {}),

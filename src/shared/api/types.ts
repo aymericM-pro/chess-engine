@@ -25,6 +25,8 @@ export interface PatchPlayerBody {
   preferredColor?: string
 }
 
+export interface CreateFriendRequestBody { addresseeId: string }
+
 // Response DTOs
 export interface UserResponseDto {
   id:         string
@@ -105,12 +107,40 @@ export interface PlayerResponseDto {
   preferredColor?: string
 }
 
+export interface FriendRequestResponseDto {
+  id: string
+  requesterId: string
+  addresseeId: string
+  status: 'pending' | 'accepted' | 'declined'
+  createdAt: string
+}
+
+export interface FriendRequestPlayerDto {
+  id: string
+  username: string
+  elo: number
+  rating: string
+}
+
+export interface FriendRequestWithPlayerDto extends FriendRequestResponseDto {
+  requester: FriendRequestPlayerDto
+  addressee: FriendRequestPlayerDto
+}
+
+export interface FriendRequestsResponseDto {
+  incoming: FriendRequestWithPlayerDto[]
+  outgoing: FriendRequestWithPlayerDto[]
+}
+
+export interface FriendResponseDto {
+  requestId: string
+  player: FriendRequestPlayerDto
+  since: string
+}
+
 export interface NotificationResponseDto {
   id: string
-  event: 'game.started' | 'game.ended'
-  kind: 'game' | string
-  title: string
-  description: string
+  type: string
   data: Record<string, unknown>
   readAt: string | null
   createdAt: string

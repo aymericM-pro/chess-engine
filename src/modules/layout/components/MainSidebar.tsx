@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { History, Swords, Users } from "lucide-react";
+import { History, Swords, UserRoundPlus, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import { usePlayerStore } from "@/modules/players/store/playerStore";
@@ -8,6 +8,7 @@ const sidebarLinks = [
   { key: "play", label: "nav.play", path: "/play", icon: <Swords size={17} /> },
   { key: "history", label: "nav.history", path: "/history", icon: <History size={17} /> },
   { key: "players", label: "nav.players", path: "/players", icon: <Users size={17} /> },
+  { key: "friends", label: "nav.friends", path: "/friends", icon: <UserRoundPlus size={17} /> },
 ];
 
 export function MainSidebar() {
@@ -34,7 +35,7 @@ export function MainSidebar() {
               className={({ isActive }) => [
                 "relative flex min-h-[38px] items-center gap-3 whitespace-nowrap rounded-lg px-3 text-sm font-semibold no-underline transition-[background,color,box-shadow] duration-150 lg:min-h-[46px] lg:px-[13px]",
                 isActive
-                  ? "rounded-tl-none bg-[rgba(201,169,110,0.10)] text-[var(--color-gold)] shadow-[inset_0_0_0_1px_rgba(201,169,110,0.20)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-none before:bg-[var(--color-gold)]"
+                  ? "rounded-l-none bg-[rgba(201,169,110,0.10)] text-[var(--color-gold)] shadow-[inset_0_0_0_1px_rgba(201,169,110,0.20)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-none before:bg-[var(--color-gold)]"
                   : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text-primary)]",
               ].join(" ")}
             >

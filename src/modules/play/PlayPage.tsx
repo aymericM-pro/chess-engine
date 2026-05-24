@@ -1,17 +1,18 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Bot, ArrowLeft, Clock, Crown, Swords, Zap, Handshake, Flag, AlertTriangle, Timer, Flame, Infinity as InfinityIcon, Shield, ShieldOff, ChevronRight, Users, MonitorCog, Download } from "lucide-react";
+import { Bot, ArrowLeft, Clock, Crown, Swords, Zap, Handshake, Flag, AlertTriangle, Timer, Flame, Infinity as InfinityIcon, Shield, ShieldOff, ChevronRight, Users, MonitorCog, Download, BookOpen } from "lucide-react";
 import type { PieceType, Color } from "@/shared/types/chess";
 import { PieceSVG } from "@/shared/pieces/PieceSVG";
 import { clickCell, promote, INITIAL_STATE, getGameStatus } from "@/modules/game/engine/boardGame";
 import type { PromotionPieceType } from "@/modules/game/engine/boardGame";
 import { gamesApi } from "@/shared/api/games.api";
-import { usersApi } from "@/shared/api/users.api";
+import { playersApi } from "@/shared/api/players.api";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import { getErrorMessage } from "@/shared/api/errorMessage";
 import { useToastStore } from "@/shared/toasts/toastStore";
-import type { GameResponseDto } from "@/shared/api/types";
+import type { GameResponseDto, PlayerResponseDto } from "@/shared/api/types";
+import { ChessRulesSidebar } from "@/modules/layout/components/ChessRulesSidebar";
 
 /* ─── Types ─────────────────────────────────────────── */
 type GameMode = "cpu" | "online";
@@ -48,7 +49,9 @@ interface GameConfig {
 }
 
 const PROMOTION_PIECES: PromotionPieceType[] = ["Q", "R", "B", "N"];
-const SQ = 76; // square size in px
+const BOARD_SIZE = "min(640px, calc(100vh - 64px - 174px), calc(100vw - 760px))";
+const SQ = `calc(${BOARD_SIZE} / 8)`;
+const BOT_ID = "9ef75cd3-91a6-403a-b7f5-f08851e705e7";
 
 /* ─── Two-column layout ──────────────────────────────── */
 function TwoCol({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {
@@ -234,38 +237,78 @@ function ModeSelect({ onSelect }: { onSelect: (mode: GameMode) => void }) {
 /* ─── Online setup ────────────────────────────────────── */
 function OnlineSetup({ onBack, onStart }: { onBack: () => void; onStart: (cfg: GameConfig, gameId: string) => void }) {
   const [username, setUsername] = useState("");
+  const [players, setPlayers] = useState<PlayerResponseDto[]>([]);
+  const [selectedOpponent, setSelectedOpponent] = useState<PlayerResponseDto | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [playersLoading, setPlayersLoading] = useState(false);
+  const [playersLoaded, setPlayersLoaded] = useState(false);
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const addToast = useToastStore((state) => state.addToast);
+  const authUser = useAuthStore((state) => state.user);
+
+  const loadPlayers = async () => {
+    if (playersLoaded || playersLoading) return;
+    setPlayersLoading(true);
+    try {
+      const rows = await playersApi.getAll();
+      setPlayers(rows);
+      setPlayersLoaded(true);
+    } catch (err) {
+      const message = getErrorMessage(err, "Impossible de charger les joueurs.");
+      setError(message);
+      addToast({
+        type: "error",
+        title: "Joueurs non chargés",
+        message,
+      });
+    } finally {
+      setPlayersLoading(false);
+    }
+  };
+
+  const query = username.trim().toLowerCase();
+  const matchingPlayers = query.length === 0
+    ? []
+    : players
+      .filter((player) => player.id !== authUser?.id)
+      .filter((player) => player.username.toLowerCase().includes(query))
+      .slice(0, 6);
+
+  const canSend = selectedOpponent !== null && !loading;
+
+  const selectOpponent = (player: PlayerResponseDto) => {
+    setSelectedOpponent(player);
+    setUsername(player.username);
+    setDropdownOpen(false);
+    setError(null);
+  };
 
   const handleSend = async () => {
-    if (username.trim().length === 0) return;
+    if (!selectedOpponent) {
+      setError("Sélectionnez un joueur existant dans la liste.");
+      setDropdownOpen(true);
+      return;
+    }
     setLoading(true);
     setError(null);
 
     try {
-      const users = await usersApi.getAll();
-      const opponent = users.find((user) => user.username.toLowerCase() === username.trim().toLowerCase());
-      if (!opponent) {
-        setError("Aucun utilisateur trouvé avec ce nom.");
-        return;
-      }
-
       const timeControl = TIME_CONTROLS[2];
       const game = await gamesApi.create({
         timeControl: timeControl.id,
         timeLimit: timeControl.minutes * 60,
         increment: timeControl.increment,
-        opponent: opponent.id,
+        opponent: selectedOpponent.id,
       });
 
       setSent(true);
-      onStart({ color: "w", difficulty: "medium", timeControl, mode: "online", opponentName: opponent.username }, game.id);
+      onStart({ color: "w", difficulty: "medium", timeControl, mode: "online", opponentName: selectedOpponent.username }, game.id);
       addToast({
         type: "info",
-        title: "Partie lancée",
-        message: `${opponent.username} peut rejoindre la partie depuis sa notification.`,
+        title: "Invitation envoyée",
+        message: `${selectedOpponent.username} peut accepter la partie depuis ses notifications.`,
       });
     } catch (err) {
       const message = getErrorMessage(err, "Impossible de créer la partie en ligne.");
@@ -341,19 +384,99 @@ function OnlineSetup({ onBack, onStart }: { onBack: () => void; onStart: (cfg: G
         <input
           type="text"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            setSelectedOpponent(null);
+            setDropdownOpen(true);
+            setError(null);
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.boxShadow = "0 0 0 2px var(--color-gold)";
+            setDropdownOpen(true);
+            void loadPlayers();
+          }}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="ex: Magnus2847"
           style={{ width: "100%", padding: "11px 14px", borderRadius: 10, boxSizing: "border-box", border: "none", background: "var(--color-bg-3)", color: "var(--color-text-primary)", fontSize: 14, outline: "none", transition: "box-shadow 0.15s" }}
-          onFocus={(e) => (e.currentTarget.style.boxShadow = "0 0 0 2px var(--color-gold)")}
           onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
         />
+        {dropdownOpen && (
+          <div
+            style={{
+              marginTop: 8,
+              border: "1px solid var(--color-border)",
+              background: "var(--color-bg-3)",
+              borderRadius: 10,
+              overflow: "hidden",
+              boxShadow: "0 18px 38px rgba(0,0,0,0.28)",
+            }}
+          >
+            {playersLoading && (
+              <div style={{ padding: "12px 14px", fontSize: 13, color: "var(--color-text-muted)" }}>
+                Recherche des joueurs…
+              </div>
+            )}
+
+            {!playersLoading && username.trim().length === 0 && (
+              <div style={{ padding: "12px 14px", fontSize: 13, color: "var(--color-text-muted)" }}>
+                Tapez un nom pour rechercher dans la base.
+              </div>
+            )}
+
+            {!playersLoading && username.trim().length > 0 && matchingPlayers.length === 0 && (
+              <div style={{ padding: "12px 14px", fontSize: 13, color: "var(--color-danger)" }}>
+                Aucun joueur trouvé.
+              </div>
+            )}
+
+            {!playersLoading && matchingPlayers.map((player) => (
+              <button
+                key={player.id}
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => selectOpponent(player)}
+                style={{
+                  width: "100%",
+                  minHeight: 52,
+                  border: "none",
+                  borderBottom: "1px solid var(--color-border)",
+                  background: selectedOpponent?.id === player.id ? "rgba(201,169,110,0.10)" : "transparent",
+                  color: "var(--color-text-primary)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  padding: "10px 13px",
+                  textAlign: "left",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.045)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = selectedOpponent?.id === player.id ? "rgba(201,169,110,0.10)" : "transparent")}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                  <span style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #d7c07e, #ae824d)", color: "#101217", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, flexShrink: 0 }}>
+                    {player.username.slice(0, 2).toUpperCase()}
+                  </span>
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{player.username}</span>
+                    <span style={{ display: "block", marginTop: 2, fontSize: 11, color: "var(--color-text-muted)" }}>{player.elo} ELO · {player.rating}</span>
+                  </span>
+                </span>
+                {selectedOpponent?.id === player.id && (
+                  <span style={{ fontSize: 11, fontWeight: 900, color: "var(--color-gold)", flexShrink: 0 }}>
+                    Sélectionné
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <button
         onClick={handleSend}
-        disabled={username.trim().length === 0 || loading}
-        style={{ width: "100%", padding: "13px", borderRadius: 10, border: "none", background: username.trim().length > 0 && !loading ? "var(--color-gold)" : "var(--color-bg-3)", color: username.trim().length > 0 && !loading ? "#0d1117" : "var(--color-faint)", fontSize: 14, fontWeight: 700, cursor: username.trim().length > 0 && !loading ? "pointer" : "not-allowed", transition: "opacity 0.15s" }}
-        onMouseEnter={(e) => { if (username.trim().length > 0 && !loading) (e.currentTarget.style.opacity = "0.88"); }}
+        disabled={!canSend}
+        style={{ width: "100%", padding: "13px", borderRadius: 10, border: "none", background: canSend ? "var(--color-gold)" : "var(--color-bg-3)", color: canSend ? "#0d1117" : "var(--color-faint)", fontSize: 14, fontWeight: 700, cursor: canSend ? "pointer" : "not-allowed", transition: "opacity 0.15s" }}
+        onMouseEnter={(e) => { if (canSend) (e.currentTarget.style.opacity = "0.88"); }}
         onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
       >
         {loading ? "Création…" : "Envoyer la demande"}
@@ -370,7 +493,7 @@ function OnlineSetup({ onBack, onStart }: { onBack: () => void; onStart: (cfg: G
         En attente d'acceptation. La partie démarrera automatiquement.
       </p>
       <button
-        onClick={() => { setSent(false); setUsername(""); }}
+        onClick={() => { setSent(false); setUsername(""); setSelectedOpponent(null); }}
         style={{ marginTop: 8, background: "var(--color-bg-3)", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 500, color: "var(--color-text-muted)", cursor: "pointer", transition: "color 0.15s" }}
         onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
@@ -539,7 +662,6 @@ function SetupScreen({ onStart, onBack }: { onStart: (cfg: GameConfig, gameId: s
         onClick={async () => {
           setError(null);
           setLoading(true);
-            const BOT_ID = '9ef75cd3-91a6-403a-b7f5-f08851e705e7';
 
             try {
                   const game = await gamesApi.create({
@@ -594,7 +716,7 @@ function ConfirmDialog({ type, onConfirm, onCancel }: { type: DialogType; onConf
         <p style={{ fontSize: 14, color: "var(--color-text-muted)", marginBottom: 28, lineHeight: 1.65 }}>
           {isResign
             ? "Vous concédez la victoire à l'adversaire. Cette action est irréversible."
-            : "L'ordinateur évaluera votre proposition. En cas de refus, la partie continue."}
+            : "Votre adversaire recevra la proposition en temps réel. En cas de refus, la partie continue."}
         </p>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: "10px", borderRadius: 8, background: "none", border: "1px solid var(--color-border)", color: "var(--color-text-muted)", fontSize: 14, cursor: "pointer", transition: "border-color 0.15s" }}
@@ -617,7 +739,7 @@ function ConfirmDialog({ type, onConfirm, onCancel }: { type: DialogType; onConf
 function PlayerBar({ name, elo, isBot, minutes, active, color }: { name: string; elo: number; isBot?: boolean; minutes: number; active: boolean; color: "w" | "b" }) {
   const display = minutes === 0 ? "∞" : `${String(minutes).padStart(2, "0")}:00`;
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 4px" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 56, paddingLeft: 20, boxSizing: "border-box" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{ width: 36, height: 36, borderRadius: "50%", background: color === "w" ? "linear-gradient(135deg,#e6d5a0,#c8a95a)" : "linear-gradient(135deg,#444,#222)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, border: "1px solid var(--color-border)" }}>
           {color === "w" ? "♔" : "♚"}
@@ -650,6 +772,54 @@ function MoveList({ moves }: { moves: string[] }) {
           </div>
         ))
       }
+    </div>
+  );
+}
+
+function DrawOfferCard({
+  incoming,
+  pending,
+  loading,
+  onAccept,
+  onDecline,
+}: {
+  incoming: boolean;
+  pending: boolean;
+  loading: boolean;
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
+  if (!incoming && !pending) return null;
+
+  return (
+    <div style={{ background: "rgba(201,169,110,0.08)", border: "1px solid rgba(201,169,110,0.24)", borderRadius: 10, padding: "12px 14px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--color-gold)", fontSize: 13, fontWeight: 800, marginBottom: 4 }}>
+        <Handshake size={15} />
+        {incoming ? "Proposition de nulle reçue" : "Nulle proposée"}
+      </div>
+      <p style={{ margin: 0, color: "var(--color-text-muted)", fontSize: 12, lineHeight: 1.5 }}>
+        {incoming ? "Votre adversaire souhaite partager le point." : "En attente de la réponse de votre adversaire."}
+      </p>
+      {incoming && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={onDecline}
+            style={{ height: 36, borderRadius: 8, border: "1px solid var(--color-border)", background: "transparent", color: "var(--color-text-muted)", fontSize: 13, fontWeight: 700, cursor: loading ? "wait" : "pointer" }}
+          >
+            Refuser
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={onAccept}
+            style={{ height: 36, borderRadius: 8, border: "1px solid rgba(201,169,110,0.34)", background: "var(--color-gold)", color: "#0d1117", fontSize: 13, fontWeight: 800, cursor: loading ? "wait" : "pointer", opacity: loading ? 0.75 : 1 }}
+          >
+            Accepter
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -704,18 +874,27 @@ function buildSan(
 /* ─── Game view ──────────────────────────────────────── */
 type PendingMoveInfo = { fromRow: number; fromCol: number; toRow: number; toCol: number; isCapture: boolean };
 
-function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: string; onEnd: () => void }) {
+function GameView({ config, gameId }: { config: GameConfig; gameId: string }) {
   const [gameState, setGameState] = useState(INITIAL_STATE);
   const [moves, setMoves] = useState<string[]>([]);
   const [remoteGame, setRemoteGame] = useState<GameResponseDto | null>(null);
   const [dialog, setDialog] = useState<DialogType | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [drawResponseLoading, setDrawResponseLoading] = useState(false);
   const [pendingMoveInfo, setPendingMoveInfo] = useState<PendingMoveInfo | null>(null);
   const reportRequestedRef = useRef(false);
+  const lastRemoteGameRef = useRef<GameResponseDto | null>(null);
   const addToast = useToastStore((state) => state.addToast);
   const authUser = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
 
   const { board, selected, legalMoves, turn, inCheck, pendingPromotion } = gameState;
+  const isWaitingForOpponent = config.mode === "online" && remoteGame?.status === "waiting";
+  const gameStatus = remoteGame?.status ?? "active";
+  const drawOfferedBy = remoteGame?.drawOfferedBy ?? null;
+  const incomingDrawOffer = Boolean(drawOfferedBy && drawOfferedBy !== authUser?.id);
+  const ownDrawOfferPending = Boolean(drawOfferedBy && drawOfferedBy === authUser?.id);
+  const actionsDisabled = isWaitingForOpponent || gameStatus === "finished";
 
   useEffect(() => {
     let active = true;
@@ -740,33 +919,7 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
     };
   }, [addToast, gameId]);
 
-  useEffect(() => {
-    if (!token) return;
-
-    const ws = new WebSocket(`ws://localhost:3000/ws/games?token=${encodeURIComponent(token)}`);
-    ws.addEventListener("open", () => {
-      ws.send(JSON.stringify({ type: "game.join", gameId }));
-    });
-    ws.addEventListener("message", (event) => {
-      const payload = JSON.parse(event.data) as { type: string; gameId?: string; game?: GameResponseDto };
-      if ((payload.type !== "game.snapshot" && payload.type !== "game.updated") || payload.gameId !== gameId || !payload.game) return;
-
-      setRemoteGame(payload.game);
-      setGameState(stateFromGame(payload.game));
-      setMoves(payload.game.moves.map((move) => move.san));
-    });
-
-    return () => {
-      ws.close();
-    };
-  }, [gameId, token]);
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: "0.6rem", fontWeight: 600, color: "var(--color-faint)",
-    fontFamily: "var(--font-display)", letterSpacing: "0.05em", userSelect: "none",
-  };
-
-  const generateReportOnce = async () => {
+  const generateReportOnce = useCallback(async () => {
     if (!gameId || reportRequestedRef.current) return;
     reportRequestedRef.current = true;
 
@@ -790,6 +943,60 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
         message: getErrorMessage(err, "La partie est terminée, mais le rapport PDF n'a pas pu être créé."),
       });
     }
+  }, [addToast, gameId]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const ws = new WebSocket(`ws://localhost:3000/ws/games?token=${encodeURIComponent(token)}`);
+    ws.addEventListener("open", () => {
+      ws.send(JSON.stringify({ type: "game.join", gameId }));
+    });
+    ws.addEventListener("message", (event) => {
+      const payload = JSON.parse(event.data) as { type: string; gameId?: string; game?: GameResponseDto };
+      if ((payload.type !== "game.snapshot" && payload.type !== "game.updated") || payload.gameId !== gameId || !payload.game) return;
+
+      const previous = lastRemoteGameRef.current;
+      setRemoteGame(payload.game);
+      lastRemoteGameRef.current = payload.game;
+      setGameState(stateFromGame(payload.game));
+      setMoves(payload.game.moves.map((move) => move.san));
+
+      if (
+        payload.type === "game.updated"
+        && payload.game.drawOfferedBy
+        && payload.game.drawOfferedBy !== authUser?.id
+        && previous?.drawOfferedBy !== payload.game.drawOfferedBy
+      ) {
+        addToast({
+          type: "info",
+          title: "Nulle proposée",
+          message: "Votre adversaire propose la nulle.",
+        });
+      }
+
+      if (
+        payload.type === "game.updated"
+        && payload.game.status === "finished"
+        && previous?.status !== "finished"
+      ) {
+        addToast({
+          type: "info",
+          title: payload.game.result === "draw" ? "Partie nulle" : "Partie terminée",
+          message: payload.game.result === "draw" ? "La proposition de nulle a été acceptée." : "La partie est terminée.",
+        });
+        void generateReportOnce();
+      }
+    });
+
+    return () => {
+      ws.close();
+    };
+  }, [addToast, authUser?.id, gameId, generateReportOnce, token]);
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: "0.6rem", fontWeight: 600, color: "var(--color-faint)",
+    fontFamily: "var(--font-display)", letterSpacing: "0.05em", userSelect: "none",
   };
 
   const sendMove = (
@@ -821,6 +1028,8 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
   };
 
   const handleClick = (r: number, c: number) => {
+    if (gameStatus === "finished") return;
+    if (isWaitingForOpponent) return;
     if (pendingPromotion) return;
     if (turn !== config.color) return;
     const prev = gameState;
@@ -870,47 +1079,77 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
   const diffLabel = { easy: "Facile", medium: "Moyen", hard: "Difficile" }[config.difficulty];
   const opponentName = config.mode === "online" ? config.opponentName ?? "Adversaire" : "Ordinateur";
   const opponentColor: "w" | "b" = config.color === "w" ? "b" : "w";
-  const gameStatus = remoteGame?.status ?? "active";
   const boardRows = config.color === "b" ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
   const boardCols = config.color === "b" ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
+
+  const respondToDraw = async (accept: boolean) => {
+    setDrawResponseLoading(true);
+    try {
+      const game = accept ? await gamesApi.drawAccept(gameId) : await gamesApi.drawDecline(gameId);
+      setRemoteGame(game);
+      setGameState(stateFromGame(game));
+      setMoves(game.moves.map((move) => move.san));
+      addToast({
+        type: accept ? "success" : "info",
+        title: accept ? "Nulle acceptée" : "Nulle refusée",
+        message: accept ? "La partie est terminée sur accord mutuel." : "La partie continue.",
+      });
+      if (game.status === "finished") void generateReportOnce();
+    } catch (err) {
+      addToast({
+        type: "error",
+        title: "Réponse impossible",
+        message: getErrorMessage(err, "Impossible de répondre à la proposition de nulle."),
+      });
+    } finally {
+      setDrawResponseLoading(false);
+    }
+  };
+
   const handleConfirm = async () => {
+    const action = dialog;
     setDialog(null);
+    if (!action) return;
+
     try {
       const game =
-        dialog === "resign"
+        action === "resign"
           ? await gamesApi.resign(gameId)
-          : dialog === "draw"
+          : action === "draw"
             ? await gamesApi.draw(gameId)
             : null;
 
-      if (game?.status === "finished") await generateReportOnce();
+      if (game) {
+        setRemoteGame(game);
+        setGameState(stateFromGame(game));
+        setMoves(game.moves.map((move) => move.san));
+      }
+      if (game?.status === "finished") void generateReportOnce();
       addToast({
-        type: "success",
-        title: dialog === "resign" ? "Partie abandonnée" : "Nulle proposée",
-        message: dialog === "resign" ? "La fin de partie a bien été enregistrée." : "Votre proposition a été envoyée.",
+        type: action === "resign" ? "success" : "info",
+        title: action === "resign" ? "Partie abandonnée" : "Nulle proposée",
+        message: action === "resign" ? "La fin de partie a bien été enregistrée." : "Votre proposition a été envoyée en temps réel.",
       });
     } catch (err) {
       addToast({
         type: "error",
-        title: dialog === "resign" ? "Abandon impossible" : "Proposition impossible",
+        title: action === "resign" ? "Abandon impossible" : "Proposition impossible",
         message: getErrorMessage(err, "La partie continue localement, mais l'action n'a pas pu être enregistrée."),
       });
-      // game continues locally if API call fails
     }
-    onEnd();
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 28, padding: "28px 40px", maxWidth: 1100, margin: "0 auto", flex: 1 }}>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start", gap: 36, padding: "18px 40px", width: "100%", height: "calc(100vh - 64px)", boxSizing: "border-box", flex: 1, overflow: "hidden" }}>
 
       {/* Board column */}
-      <div style={{ flexShrink: 0 }}>
+      <div style={{ width: `calc(${BOARD_SIZE} + 20px)`, flexShrink: 0 }}>
 
         {/* Opponent player bar */}
         <PlayerBar name={opponentName} elo={800} isBot={config.mode !== "online"} color={opponentColor} minutes={config.timeControl.minutes} active={turn === opponentColor} />
 
         {/* Board */}
-        <div style={{ display: "flex", flexDirection: "column", marginTop: 6, marginBottom: 6 }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex" }}>
             {/* Rank labels */}
             <div style={{ display: "flex", flexDirection: "column" }}>
@@ -919,8 +1158,8 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
               ))}
             </div>
             {/* Grid */}
-            <div style={{ border: "2px solid #2a2a32", display: "inline-block", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(8, ${SQ}px)` }}>
+            <div style={{ border: "1px solid rgba(0,0,0,0.38)", display: "inline-block", borderRadius: 3, overflow: "hidden", boxShadow: "0 14px 36px rgba(0,0,0,0.20)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(8, ${SQ})` }}>
                 {boardRows.map((r) =>
                   boardCols.map((c) => {
                     const piece = board[r][c];
@@ -930,9 +1169,13 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
                     const isCheck = inCheck && piece === `${turn}K`;
                     return (
                       <div key={`${r}-${c}`} onClick={() => handleClick(r, c)} style={{ width: SQ, height: SQ, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", background: isCheck ? "#c84040" : isSel ? "#f6f669" : isLight ? "#f0d9b5" : "#b58863" }}>
-                        {piece && <PieceSVG type={piece[1] as PieceType} color={piece[0] as Color} size={SQ - 10} />}
+                        {piece && (
+                          <div style={{ width: "86%", height: "86%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <PieceSVG type={piece[1] as PieceType} color={piece[0] as Color} size={76} />
+                          </div>
+                        )}
                         {isLegal && (
-                          <div style={{ position: "absolute", width: piece ? SQ - 6 : 24, height: piece ? SQ - 6 : 24, borderRadius: piece ? 0 : "50%", background: piece ? "transparent" : "rgba(0,0,0,0.18)", border: piece ? "4px solid rgba(0,0,0,0.22)" : "none", pointerEvents: "none", boxSizing: "border-box" }} />
+                          <div style={{ position: "absolute", width: piece ? "calc(100% - 6px)" : 24, height: piece ? "calc(100% - 6px)" : 24, borderRadius: piece ? 0 : "50%", background: piece ? "transparent" : "rgba(0,0,0,0.18)", border: piece ? "4px solid rgba(0,0,0,0.22)" : "none", pointerEvents: "none", boxSizing: "border-box" }} />
                         )}
                       </div>
                     );
@@ -954,15 +1197,45 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
       </div>
 
       {/* Right panel */}
-      <div style={{ width: 240, display: "flex", flexDirection: "column", gap: 12, paddingTop: 52 }}>
+      <div style={{ width: 320, display: "flex", flexDirection: "column", gap: 12, paddingTop: 0, flexShrink: 0, maxHeight: "calc(100vh - 64px - 36px)", overflow: "hidden" }}>
+        <button
+          type="button"
+          onClick={() => setRulesOpen(true)}
+          style={{ height: 42, borderRadius: 10, border: "1px solid rgba(201,169,110,0.28)", background: "rgba(201,169,110,0.08)", color: "var(--color-gold)", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, fontSize: 13, fontWeight: 800, cursor: "pointer", transition: "background 0.15s, border-color 0.15s" }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(201,169,110,0.13)";
+            e.currentTarget.style.borderColor = "rgba(201,169,110,0.42)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(201,169,110,0.08)";
+            e.currentTarget.style.borderColor = "rgba(201,169,110,0.28)";
+          }}
+        >
+          <BookOpen size={16} />
+          Voir les règles
+        </button>
 
         {/* Game info */}
         <div style={{ background: "var(--color-bg-2)", border: "1px solid var(--color-border)", borderRadius: 10, padding: "14px 16px" }}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 3 }}>{config.mode === "online" ? "En ligne" : `Solo · ${diffLabel}`}</div>
           <div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
-            {config.timeControl.label}{config.timeControl.increment > 0 ? ` +${config.timeControl.increment}s` : ""} · {gameStatus === "finished" ? "Terminée" : "En cours"}
+            {config.timeControl.label}{config.timeControl.increment > 0 ? ` +${config.timeControl.increment}s` : ""} · {isWaitingForOpponent ? "Invitation en attente" : gameStatus === "finished" ? "Terminée" : "En cours"}
           </div>
         </div>
+
+        {isWaitingForOpponent && (
+          <div style={{ background: "rgba(201,169,110,0.08)", border: "1px solid rgba(201,169,110,0.22)", borderRadius: 10, padding: "12px 14px", color: "var(--color-gold)", fontSize: 12, lineHeight: 1.5, fontWeight: 700 }}>
+            En attente que {opponentName} accepte l'invitation. Le plateau se synchronisera automatiquement.
+          </div>
+        )}
+
+        <DrawOfferCard
+          incoming={incomingDrawOffer}
+          pending={ownDrawOfferPending}
+          loading={drawResponseLoading}
+          onAccept={() => void respondToDraw(true)}
+          onDecline={() => void respondToDraw(false)}
+        />
 
         {/* Turn */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 8, background: "var(--color-bg-2)", border: "1px solid var(--color-border)" }}>
@@ -973,7 +1246,7 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
         </div>
 
         {/* Move list */}
-        <div style={{ background: "var(--color-bg-2)", border: "1px solid var(--color-border)", borderRadius: 10, display: "flex", flexDirection: "column", height: 280 }}>
+        <div style={{ background: "var(--color-bg-2)", border: "1px solid var(--color-border)", borderRadius: 10, display: "flex", flexDirection: "column", minHeight: 160, flex: "1 1 220px" }}>
           <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--color-border)", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--color-text-muted)", flexShrink: 0 }}>
             Coups · {moves.length}
           </div>
@@ -982,13 +1255,13 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
 
         {/* Actions */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <button onClick={() => setDialog("draw")} style={{ padding: "11px", borderRadius: 8, border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontSize: 14, fontWeight: 500, cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,169,110,0.4)"; (e.currentTarget as HTMLElement).style.color = "var(--color-gold)"; }}
+          <button disabled={actionsDisabled || Boolean(drawOfferedBy)} onClick={() => setDialog("draw")} style={{ padding: "11px", borderRadius: 8, border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontSize: 14, fontWeight: 500, cursor: actionsDisabled || drawOfferedBy ? "not-allowed" : "pointer", opacity: actionsDisabled || drawOfferedBy ? 0.52 : 1, transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            onMouseEnter={(e) => { if (actionsDisabled || drawOfferedBy) return; (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,169,110,0.4)"; (e.currentTarget as HTMLElement).style.color = "var(--color-gold)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)"; (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)"; }}>
-            <Handshake size={15} /> Proposer la nulle
+            <Handshake size={15} /> {ownDrawOfferPending ? "Nulle proposée" : incomingDrawOffer ? "Répondre à la nulle" : "Proposer la nulle"}
           </button>
-          <button onClick={() => setDialog("resign")} style={{ padding: "11px", borderRadius: 8, border: "1px solid rgba(248,81,73,0.3)", background: "rgba(248,81,73,0.07)", color: "var(--color-danger)", fontSize: 14, fontWeight: 500, cursor: "pointer", transition: "background 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.15)")}
+          <button disabled={actionsDisabled} onClick={() => setDialog("resign")} style={{ padding: "11px", borderRadius: 8, border: "1px solid rgba(248,81,73,0.3)", background: "rgba(248,81,73,0.07)", color: "var(--color-danger)", fontSize: 14, fontWeight: 500, cursor: actionsDisabled ? "not-allowed" : "pointer", opacity: actionsDisabled ? 0.52 : 1, transition: "background 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            onMouseEnter={(e) => { if (!actionsDisabled) e.currentTarget.style.background = "rgba(248,81,73,0.15)"; }}
             onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.07)")}>
             <Flag size={15} /> Abandonner
           </button>
@@ -1021,6 +1294,7 @@ function GameView({ config, gameId, onEnd }: { config: GameConfig; gameId: strin
           onCancel={() => setDialog(null)}
         />
       )}
+      <ChessRulesSidebar open={rulesOpen} onClose={() => setRulesOpen(false)} />
     </div>
   );
 }
@@ -1030,6 +1304,7 @@ export function PlayPage() {
   const [mode, setMode] = useState<GameMode | null>(null);
   const [config, setConfig] = useState<GameConfig | null>(null);
   const [gameId, setGameId] = useState<string>("");
+  const [checkingCurrentGame, setCheckingCurrentGame] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const authUser = useAuthStore((s) => s.user);
   const addToast = useToastStore((state) => state.addToast);
@@ -1065,7 +1340,46 @@ export function PlayPage() {
       });
   }, [addToast, authUser, gameId, searchParams]);
 
-  if (config) return <GameView config={config} gameId={gameId} onEnd={() => { setConfig(null); setMode(null); setGameId(""); setSearchParams({}); }} />;
+  useEffect(() => {
+    const explicitGameId = searchParams.get("game");
+    if (explicitGameId || !authUser || config || mode) return;
+
+    let active = true;
+    setCheckingCurrentGame(true);
+
+    gamesApi.getAll()
+      .then((games) => {
+        if (!active) return;
+
+        const currentOnlineGame = games.find((game) => {
+          const isInProgress = game.status === "waiting" || game.status === "active";
+          const hasRealOpponent = game.blackId !== null && game.blackId !== BOT_ID;
+          const isPlayer = game.whiteId === authUser.id || game.blackId === authUser.id;
+          return isInProgress && hasRealOpponent && isPlayer;
+        });
+
+        if (currentOnlineGame) {
+          setSearchParams({ game: currentOnlineGame.id });
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setCheckingCurrentGame(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authUser, config, mode, searchParams, setSearchParams]);
+
+  if (config) return <GameView config={config} gameId={gameId} />;
+  if (checkingCurrentGame) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-muted)", fontSize: 14 }}>
+        Recherche d'une partie en cours…
+      </div>
+    );
+  }
   if (mode === "cpu") return <SetupScreen onStart={handleStart} onBack={() => setMode(null)} />;
   if (mode === "online") return <OnlineSetup onStart={handleStart} onBack={() => setMode(null)} />;
   return <ModeSelect onSelect={setMode} />;

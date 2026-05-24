@@ -7,6 +7,7 @@ import { LivePage } from "../modules/live/LivePage";
 import { LandingPage } from "../modules/landing/LandingPage";
 import { HistoryPage } from "../modules/history/HistoryPage";
 import { PlayersPage } from "../modules/players/PlayersPage";
+import { FriendsPage } from "../modules/friends/FriendsPage";
 import { ProfilePage } from "../modules/profile/ProfilePage";
 import { PlayPage } from "../modules/play/PlayPage";
 import { LoginPage } from "../modules/auth/LoginPage";
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: "settings", element: <RequireAuth><SettingsPage /></RequireAuth> },
       { path: "board",    element: <RequireAuth><Board /></RequireAuth> },
       { path: "players",  element: <RequireAuth><PlayersPage /></RequireAuth> },
+      { path: "friends",  element: <RequireAuth><FriendsPage /></RequireAuth> },
       { path: "live",     element: <RequireAuth><LivePage /></RequireAuth> },
       { path: "history",  element: <RequireAuth><HistoryPage /></RequireAuth> },
       { path: "profile",  element: <RequireAuth><ProfilePage /></RequireAuth> },

@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Bell, LogOut, Settings, User, Sun, Moon } from "lucide-react";
 import { IconButton } from "@/shared/components/IconButton";
@@ -7,7 +7,7 @@ import { NotificationSidebar } from "./NotificationSidebar";
 import { useThemeStore } from "@/shared/theme/useThemeStore";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import { usePlayerStore } from "@/modules/players/store/playerStore";
-import { useNotificationStore } from "@/modules/notifications/notificationStore";
+import { useGameInviteStore } from "@/modules/gameInvites/gameInviteStore";
 
 export function TopNav() {
   const { t } = useTranslation();
@@ -15,19 +15,33 @@ export function TopNav() {
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
   const { theme, toggle } = useThemeStore();
+  const token = useAuthStore((s) => s.token);
   const authUser = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
   const { player, fetchPlayer } = usePlayerStore();
-  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const clearPlayer = usePlayerStore((state) => state.clearPlayer);
+  const inviteCount = useGameInviteStore((state) => state.unreadCount);
+  const clearInvites = useGameInviteStore((state) => state.clearInvites);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (authUser?.id && !player) {
       fetchPlayer(authUser.id).catch(() => undefined);
     }
-  }, [authUser?.id]);
+  }, [authUser?.id, fetchPlayer, player]);
 
   const initials = ((authUser?.firstName?.[0] ?? '') + (authUser?.lastName?.[0] ?? authUser?.username?.[0] ?? '')).toUpperCase() || '?';
   const displayName = player?.username ?? authUser?.username ?? 'Profil';
   const displayElo  = player?.elo ?? null;
+
+  const handleLogout = () => {
+    setAvatarOpen(false);
+    setNotifOpen(false);
+    clearPlayer();
+    clearInvites();
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   useEffect(() => {
     if (!avatarOpen) return;
@@ -80,9 +94,7 @@ export function TopNav() {
           </div>
         </Link>
 
-        {/* Right zone */}
         <div className="flex items-center gap-3">
-          {/* Theme toggle */}
           <IconButton
             onClick={toggle}
             title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
@@ -90,103 +102,124 @@ export function TopNav() {
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </IconButton>
 
-          {/* Notification bell */}
-          <IconButton onClick={() => setNotifOpen(true)} badge={unreadCount}>
-            <Bell size={16} />
-          </IconButton>
-
-          {/* Avatar */}
-          <div ref={avatarRef} className="relative">
-            <button
-              onClick={() => setAvatarOpen((o) => !o)}
-              className="border-none cursor-pointer p-0 rounded-full hover:opacity-80 transition-opacity"
-              style={{ background: "none" }}
-            >
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[0.6rem] tracking-[0.06em] flex-shrink-0"
-                style={{
-                  background: "linear-gradient(135deg, #e6d5a0, #c8a95a)",
-                  color: "#0d1117",
-                }}
+          {!token ? (
+            <div className="flex items-center gap-2">
+              <Link
+                to="/login"
+                className="flex h-9 items-center rounded-lg border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] no-underline transition-[background,border-color,color] hover:border-[rgba(201,169,110,0.42)] hover:bg-[rgba(201,169,110,0.08)] hover:text-[var(--color-gold)]"
               >
-                {initials}
-              </div>
-            </button>
-
-            {avatarOpen && (
-              <div
-                className="absolute right-0 top-full mt-2 rounded-xl z-[300]"
-                style={{
-                  background: "var(--color-bg-2)",
-                  border: "1px solid var(--color-border)",
-                  boxShadow: theme === "dark" ? "0 12px 32px rgba(0,0,0,0.5)" : "0 8px 24px rgba(0,0,0,0.12)",
-                  width: 192,
-                }}
+                Connexion
+              </Link>
+              <Link
+                to="/register"
+                className="flex h-9 items-center rounded-lg border border-[var(--color-gold)] bg-[var(--color-gold)] px-4 text-sm font-bold text-[#0d1117] no-underline transition-opacity hover:opacity-90"
               >
-                {/* User info */}
-                <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #e6d5a0, #c8a95a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#0d1117", letterSpacing: "0.04em", flexShrink: 0 }}>
+                Inscription
+              </Link>
+            </div>
+          ) : (
+            <>
+              <IconButton onClick={() => setNotifOpen(true)} badge={inviteCount}>
+                <Bell size={16} />
+              </IconButton>
+
+              <div ref={avatarRef} className="relative">
+                <button
+                  onClick={() => setAvatarOpen((o) => !o)}
+                  className="border-none cursor-pointer p-0 rounded-full hover:opacity-80 transition-opacity"
+                  style={{ background: "none" }}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[0.6rem] tracking-[0.06em] flex-shrink-0"
+                    style={{
+                      background: "linear-gradient(135deg, #e6d5a0, #c8a95a)",
+                      color: "#0d1117",
+                    }}
+                  >
                     {initials}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: 13, color: "var(--color-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {displayName}
-                    </p>
-                    {displayElo !== null && (
-                      <p style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: 1 }}>{displayElo} ELO</p>
-                    )}
-                  </div>
-                </div>
+                </button>
 
-                {/* Links */}
-                <div style={{ paddingTop: 4, paddingBottom: 4 }}>
-                  {[
-                    { icon: <User size={13} />, label: "Profil", to: "/profile" },
-                    { icon: <Settings size={13} />, label: t("nav.settings"), to: "/settings" },
-                  ].map(({ icon, label, to }) => (
-                    <Link
-                      key={to}
-                      to={to}
-                      onClick={() => setAvatarOpen(false)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 9,
-                        padding: "8px 16px", textDecoration: "none",
-                        fontSize: 13, color: "var(--color-text-primary)",
-                        transition: "background 0.15s",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-bg-3)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-                    >
-                      <span style={{ color: "var(--color-text-muted)" }}>{icon}</span>
-                      {label}
-                    </Link>
-                  ))}
-
-                  <div style={{ height: 1, background: "var(--color-border)", margin: "4px 0" }} />
-
-                  <Link
-                    to="/login"
-                    onClick={() => setAvatarOpen(false)}
+                {avatarOpen && (
+                  <div
+                    className="absolute right-0 top-full mt-2 rounded-xl z-[300]"
                     style={{
-                      width: "100%", display: "flex", alignItems: "center", gap: 9,
-                      padding: "8px 16px", textDecoration: "none",
-                      fontSize: 13, fontWeight: 500, color: "var(--color-danger)",
-                      transition: "background 0.15s",
+                      background: "var(--color-bg-2)",
+                      border: "1px solid var(--color-border)",
+                      boxShadow: theme === "dark" ? "0 12px 32px rgba(0,0,0,0.5)" : "0 8px 24px rgba(0,0,0,0.12)",
+                      width: 192,
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.08)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                   >
-                    <LogOut size={13} />
-                    {t("nav.logout")}
-                  </Link>
-                </div>
+                    {/* User info */}
+                    <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #e6d5a0,#c8a95a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#0d1117", letterSpacing: "0.04em", flexShrink: 0 }}>
+                        {initials}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontWeight: 600, fontSize: 13, color: "var(--color-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {displayName}
+                        </p>
+                        {displayElo !== null && (
+                          <p style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: 1 }}>{displayElo} ELO</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Links */}
+                    <div style={{ paddingTop: 4, paddingBottom: 4 }}>
+                      {[
+                        { icon: <User size={13} />, label: "Profil", to: "/profile" },
+                        { icon: <Settings size={13} />, label: t("nav.settings"), to: "/settings" },
+                      ].map(({ icon, label, to }) => (
+                        <Link
+                          key={to}
+                          to={to}
+                          onClick={() => setAvatarOpen(false)}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 9,
+                            padding: "8px 16px", textDecoration: "none",
+                            fontSize: 13, color: "var(--color-text-primary)",
+                            transition: "background 0.15s",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-bg-3)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                        >
+                          <span style={{ color: "var(--color-text-muted)" }}>{icon}</span>
+                          {label}
+                        </Link>
+                      ))}
+
+                      <div style={{ height: 1, background: "var(--color-border)", margin: "4px 0" }} />
+
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        style={{
+                          width: "100%", display: "flex", alignItems: "center", gap: 9,
+                          padding: "8px 16px", textDecoration: "none",
+                          border: "none",
+                          background: "none",
+                          fontSize: 13, fontWeight: 500, color: "var(--color-danger)",
+                          textAlign: "left",
+                          cursor: "pointer",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.08)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                      >
+                        <LogOut size={13} />
+                        {t("nav.logout")}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </nav>
 
-      <NotificationSidebar open={notifOpen} onClose={() => setNotifOpen(false)} />
+      {token && <NotificationSidebar open={notifOpen} onClose={() => setNotifOpen(false)} />}
     </>
   );
 }

@@ -134,6 +134,144 @@ function StatusBadge({ status }: { status: string }) {
   return <span style={{ fontSize: 12, color: s.color }}>{s.label}</span>;
 }
 
+function FilterMenuButton({
+  label,
+  active,
+  open,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  open: boolean;
+  onClick: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const highlighted = active || open || hovered;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => {
+        setHovered(false);
+        setPressed(false);
+      }}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        minHeight: 40,
+        background: highlighted ? "rgba(201,169,110,0.10)" : "rgba(18,21,28,0.70)",
+        border: `1px solid ${highlighted ? "rgba(201,169,110,0.42)" : "var(--color-border)"}`,
+        borderRadius: 8,
+        padding: "8px 14px",
+        fontSize: 14,
+        fontWeight: 600,
+        color: highlighted ? "var(--color-gold)" : "var(--color-text-primary)",
+        cursor: "pointer",
+        boxShadow: open
+          ? "0 0 0 3px rgba(201,169,110,0.10), 0 12px 28px rgba(0,0,0,0.22)"
+          : hovered
+            ? "0 8px 20px rgba(0,0,0,0.18)"
+            : "none",
+        transform: pressed ? "translateY(1px) scale(0.985)" : hovered ? "translateY(-1px)" : "none",
+        transition: "background 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, transform 0.12s ease",
+        outline: "none",
+      }}
+    >
+      <span>{label}</span>
+      <ChevronDown
+        size={15}
+        style={{
+          opacity: highlighted ? 0.9 : 0.55,
+          transform: open ? "rotate(180deg)" : "none",
+          transition: "transform 0.18s ease, opacity 0.16s ease",
+        }}
+      />
+    </button>
+  );
+}
+
+function FilterOptionButton({
+  label,
+  active,
+  tone,
+  onClick,
+  capitalize,
+}: {
+  label: string;
+  active: boolean;
+  tone: ChipTone;
+  onClick: () => void;
+  capitalize?: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const highlighted = active || hovered;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => {
+        setHovered(false);
+        setPressed(false);
+      }}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 11,
+        width: "100%",
+        minHeight: 42,
+        textAlign: "left",
+        background: active ? tone.bg : hovered ? "rgba(255,255,255,0.045)" : "transparent",
+        border: `1px solid ${active ? tone.border : hovered ? "rgba(255,255,255,0.07)" : "transparent"}`,
+        borderRadius: 7,
+        padding: "9px 10px",
+        cursor: "pointer",
+        transform: pressed ? "scale(0.99)" : "none",
+        transition: "background 0.14s ease, border-color 0.14s ease, transform 0.1s ease",
+      }}
+    >
+      <span
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: 5,
+          flexShrink: 0,
+          border: `1px solid ${active ? tone.color : hovered ? "rgba(201,169,110,0.42)" : "var(--color-border)"}`,
+          background: active ? tone.bg : hovered ? "rgba(201,169,110,0.05)" : "rgba(0,0,0,0.08)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: active ? "0 0 0 3px rgba(201,169,110,0.08)" : "none",
+          transition: "background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease",
+        }}
+      >
+        {active && <Check size={11} color={tone.color} strokeWidth={3} />}
+      </span>
+      <span
+        style={{
+          fontSize: 13,
+          color: active ? tone.color : highlighted ? "var(--color-text-primary)" : "var(--color-text-muted)",
+          fontWeight: active ? 600 : 500,
+          textTransform: capitalize ? "capitalize" : "none",
+          transition: "color 0.14s ease",
+        }}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
 function ActiveFilterChip({
   label,
   tone,
@@ -424,35 +562,19 @@ export function HistoryPage() {
             {/* Filter toolbar */}
             <div ref={filterRef} style={{ position: "relative", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <button
+                <FilterMenuButton
+                  label="Cadence"
+                  active={activeTimeControls.size > 0}
+                  open={openFilter === "timeControl"}
                   onClick={() => setOpenFilter((current) => current === "timeControl" ? null : "timeControl")}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    background: activeTimeControls.size > 0 ? "rgba(201,169,110,0.10)" : "none",
-                    border: `1px solid ${activeTimeControls.size > 0 ? "rgba(201,169,110,0.35)" : "var(--color-border)"}`,
-                    borderRadius: 8, padding: "8px 14px", fontSize: 14, fontWeight: 500,
-                    color: activeTimeControls.size > 0 ? "var(--color-gold)" : "var(--color-text-primary)",
-                    cursor: "pointer",
-                  }}
-                >
-                  Cadence
-                  <ChevronDown size={14} style={{ opacity: 0.6, transform: openFilter === "timeControl" ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-                </button>
+                />
 
-                <button
+                <FilterMenuButton
+                  label="Résultat"
+                  active={activeResults.size > 0}
+                  open={openFilter === "result"}
                   onClick={() => setOpenFilter((current) => current === "result" ? null : "result")}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    background: activeResults.size > 0 ? "rgba(201,169,110,0.10)" : "none",
-                    border: `1px solid ${activeResults.size > 0 ? "rgba(201,169,110,0.35)" : "var(--color-border)"}`,
-                    borderRadius: 8, padding: "8px 14px", fontSize: 14, fontWeight: 500,
-                    color: activeResults.size > 0 ? "var(--color-gold)" : "var(--color-text-primary)",
-                    cursor: "pointer",
-                  }}
-                >
-                  Résultat
-                  <ChevronDown size={14} style={{ opacity: 0.6, transform: openFilter === "result" ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-                </button>
+                />
 
                 {activeFilterCount > 0 && (
                   <button
@@ -466,49 +588,36 @@ export function HistoryPage() {
                 )}
 
                 {openFilter === "timeControl" && (
-                  <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, background: "var(--color-bg-2)", border: "1px solid var(--color-border)", borderRadius: 10, padding: "6px", minWidth: 180, boxShadow: "0 12px 32px rgba(0,0,0,0.5)", zIndex: 200 }}>
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, background: "var(--color-bg-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "6px", minWidth: 180, boxShadow: "0 16px 40px rgba(0,0,0,0.48)", zIndex: 200 }}>
                     {allTimeControls.map((tc) => {
                       const c = getTint();
                       const active = activeTimeControls.has(tc);
                       return (
-                        <button
+                        <FilterOptionButton
                           key={tc}
+                          label={tc}
+                          active={active}
+                          tone={c}
+                          capitalize
                           onClick={() => toggleTimeControlFilter(tc)}
-                          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", background: active ? "rgba(201,169,110,0.08)" : "none", border: "none", borderRadius: 6, padding: "8px 10px", cursor: "pointer" }}
-                          onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--color-bg-3)"; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = active ? "rgba(201,169,110,0.08)" : "none"; }}
-                        >
-                          <span style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0, border: `1px solid ${active ? c.color : "var(--color-border)"}`, background: active ? c.bg : "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            {active && <Check size={10} color={c.color} strokeWidth={3} />}
-                          </span>
-                          <span style={{ fontSize: 13, color: active ? c.color : "var(--color-text-primary)", fontWeight: active ? 500 : 400, textTransform: "capitalize" }}>
-                            {tc}
-                          </span>
-                        </button>
+                        />
                       );
                     })}
                   </div>
                 )}
 
                 {openFilter === "result" && (
-                  <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 118, background: "var(--color-bg-2)", border: "1px solid var(--color-border)", borderRadius: 10, padding: "6px", minWidth: 190, boxShadow: "0 12px 32px rgba(0,0,0,0.5)", zIndex: 200 }}>
+                  <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 118, background: "var(--color-bg-2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "6px", minWidth: 190, boxShadow: "0 16px 40px rgba(0,0,0,0.48)", zIndex: 200 }}>
                     {RESULT_FILTERS.map((option) => {
                       const active = activeResults.has(option.id);
                       return (
-                        <button
+                        <FilterOptionButton
                           key={option.id}
+                          label={option.label}
+                          active={active}
+                          tone={option.tone}
                           onClick={() => toggleResultFilter(option.id)}
-                          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", background: active ? option.tone.bg : "none", border: "none", borderRadius: 6, padding: "8px 10px", cursor: "pointer" }}
-                          onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--color-bg-3)"; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = active ? option.tone.bg : "none"; }}
-                        >
-                          <span style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0, border: `1px solid ${active ? option.tone.color : "var(--color-border)"}`, background: active ? option.tone.bg : "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            {active && <Check size={10} color={option.tone.color} strokeWidth={3} />}
-                          </span>
-                          <span style={{ fontSize: 13, color: active ? option.tone.color : "var(--color-text-primary)", fontWeight: active ? 500 : 400 }}>
-                            {option.label}
-                          </span>
-                        </button>
+                        />
                       );
                     })}
                   </div>
