@@ -1,14 +1,14 @@
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { AuthLayout, Field, SubmitButton, inputStyle } from "./AuthLayout";
+import { Button } from "@/shared/components/Button";
 import { useAuthStore } from "./store/authStore";
 import { ApiError } from "@/shared/api/client";
 import { OnboardingModal } from "@/modules/onboarding/OnboardingModal";
 import { useToastStore } from "@/shared/toasts/toastStore";
-import { getFieldErrors, registerSchema, type FieldErrors } from "@/shared/validation/formSchemas";
-
-type RegisterField = "username" | "email" | "password" | "confirm";
+import { registerSchema } from "@/shared/validation/formSchemas";
+import { useZodForm } from "@/shared/validation/useZodForm";
 
 function PasswordInput({
   label,
@@ -37,15 +37,13 @@ function PasswordInput({
           onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(201,169,110,0.5)")}
           onBlur={(e) => (e.currentTarget.style.borderColor = error ? "var(--color-danger)" : "#2a2a34")}
         />
-        <button
+        <Button
+          variant="auth-input-icon"
           type="button"
           onClick={() => setVisible((v) => !v)}
-          style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#555", display: "flex", padding: 4, transition: "color 0.15s" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#aaa")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#555")}
         >
           {visible ? <EyeOff size={15} /> : <Eye size={15} />}
-        </button>
+        </Button>
       </div>
     </Field>
   );
@@ -56,9 +54,9 @@ export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [errors, setErrors] = useState<FieldErrors<RegisterField>>({});
   const [loading, setLoading] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const { errors, clearFieldError, validate } = useZodForm<typeof registerSchema>();
 
   const register = useAuthStore((s) => s.register);
   const addToast = useToastStore((s) => s.addToast);
@@ -66,18 +64,15 @@ export function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = registerSchema.safeParse({ username, email, password, confirm });
-    if (!parsed.success) {
-      setErrors(getFieldErrors<RegisterField>(parsed.error));
-      return;
-    }
-    setErrors({});
+    const parsed = validate(registerSchema, { username, email, password, confirm });
+    if (!parsed) return;
+
     setLoading(true);
     try {
       await register({
-        email: parsed.data.email,
-        username: parsed.data.username,
-        password: parsed.data.password,
+        email: parsed.email,
+        username: parsed.username,
+        password: parsed.password,
       });
       setShowOnboarding(true);
     } catch (err) {
@@ -108,7 +103,7 @@ export function RegisterPage() {
             value={username}
             onChange={(e) => {
               setUsername(e.target.value);
-              setErrors((current) => ({ ...current, username: undefined }));
+              clearFieldError("username");
             }}
             required
             style={{ ...inputStyle, borderColor: errors.username ? "var(--color-danger)" : "#2a2a34" }}
@@ -124,7 +119,7 @@ export function RegisterPage() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setErrors((current) => ({ ...current, email: undefined }));
+              clearFieldError("email");
             }}
             required
             style={{ ...inputStyle, borderColor: errors.email ? "var(--color-danger)" : "#2a2a34" }}
@@ -140,7 +135,7 @@ export function RegisterPage() {
           error={errors.password}
           onChange={(value) => {
             setPassword(value);
-            setErrors((current) => ({ ...current, password: undefined, confirm: undefined }));
+            clearFieldError("password", ["confirm"]);
           }}
         />
         <PasswordInput
@@ -149,7 +144,7 @@ export function RegisterPage() {
           error={errors.confirm}
           onChange={(value) => {
             setConfirm(value);
-            setErrors((current) => ({ ...current, confirm: undefined }));
+            clearFieldError("confirm");
           }}
         />
 
@@ -170,14 +165,11 @@ export function RegisterPage() {
 
       <p style={{ fontSize: 13, color: "#555", textAlign: "center", marginTop: 24 }}>
         Déjà un compte ?{" "}
-        <Link
+        <Button
           to="/login"
-          style={{ color: "#c9a96e", textDecoration: "none", fontWeight: 500 }}
-          onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
-        >
-          Se connecter
-        </Link>
+          variant="auth-link"
+          label="Se connecter"
+        />
       </p>
     </AuthLayout>
     </>

@@ -2,8 +2,8 @@ import { useRef, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Bell, LogOut, Settings, User, Sun, Moon } from "lucide-react";
-import { IconButton } from "@/shared/components/IconButton";
-import { NotificationSidebar } from "./NotificationSidebar";
+import { Button } from "@/shared/components/Button";
+import { useOpenNotificationSidebar } from "./NotificationSidebar";
 import { useThemeStore } from "@/shared/theme/useThemeStore";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import { usePlayerStore } from "@/modules/players/store/playerStore";
@@ -11,7 +11,6 @@ import { useGameInviteStore } from "@/modules/gameInvites/gameInviteStore";
 
 export function TopNav() {
   const { t } = useTranslation();
-  const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
   const { theme, toggle } = useThemeStore();
@@ -23,6 +22,7 @@ export function TopNav() {
   const inviteCount = useGameInviteStore((state) => state.unreadCount);
   const clearInvites = useGameInviteStore((state) => state.clearInvites);
   const navigate = useNavigate();
+  const openNotificationSidebar = useOpenNotificationSidebar();
 
   useEffect(() => {
     if (authUser?.id && !player) {
@@ -36,7 +36,6 @@ export function TopNav() {
 
   const handleLogout = () => {
     setAvatarOpen(false);
-    setNotifOpen(false);
     clearPlayer();
     clearInvites();
     logout();
@@ -95,39 +94,37 @@ export function TopNav() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <IconButton
+          <Button
+            variant="nav-icon"
             onClick={toggle}
             title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
           >
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-          </IconButton>
+          </Button>
 
           {!token ? (
             <div className="flex items-center gap-2">
-              <Link
+              <Button
                 to="/login"
-                className="flex h-9 items-center rounded-lg border border-[var(--color-border)] px-4 text-sm font-semibold text-[var(--color-text-primary)] no-underline transition-[background,border-color,color] hover:border-[rgba(201,169,110,0.42)] hover:bg-[rgba(201,169,110,0.08)] hover:text-[var(--color-gold)]"
-              >
-                Connexion
-              </Link>
-              <Link
+                variant="nav-secondary"
+                label="Connexion"
+              />
+              <Button
                 to="/register"
-                className="flex h-9 items-center rounded-lg border border-[var(--color-gold)] bg-[var(--color-gold)] px-4 text-sm font-bold text-[#0d1117] no-underline transition-opacity hover:opacity-90"
-              >
-                Inscription
-              </Link>
+                variant="nav-primary"
+                label="Inscription"
+              />
             </div>
           ) : (
             <>
-              <IconButton onClick={() => setNotifOpen(true)} badge={inviteCount}>
+              <Button variant="nav-icon" onClick={openNotificationSidebar} badge={inviteCount}>
                 <Bell size={16} />
-              </IconButton>
+              </Button>
 
               <div ref={avatarRef} className="relative">
-                <button
+                <Button
+                  variant="nav-avatar"
                   onClick={() => setAvatarOpen((o) => !o)}
-                  className="border-none cursor-pointer p-0 rounded-full hover:opacity-80 transition-opacity"
-                  style={{ background: "none" }}
                 >
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[0.6rem] tracking-[0.06em] flex-shrink-0"
@@ -138,7 +135,7 @@ export function TopNav() {
                   >
                     {initials}
                   </div>
-                </button>
+                </Button>
 
                 {avatarOpen && (
                   <div
@@ -171,45 +168,24 @@ export function TopNav() {
                         { icon: <User size={13} />, label: "Profil", to: "/profile" },
                         { icon: <Settings size={13} />, label: t("nav.settings"), to: "/settings" },
                       ].map(({ icon, label, to }) => (
-                        <Link
+                        <Button
                           key={to}
                           to={to}
+                          variant="menu-item"
+                          icon={<span style={{ color: "var(--color-text-muted)" }}>{icon}</span>}
+                          label={label}
                           onClick={() => setAvatarOpen(false)}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 9,
-                            padding: "8px 16px", textDecoration: "none",
-                            fontSize: 13, color: "var(--color-text-primary)",
-                            transition: "background 0.15s",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-bg-3)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-                        >
-                          <span style={{ color: "var(--color-text-muted)" }}>{icon}</span>
-                          {label}
-                        </Link>
+                        />
                       ))}
 
                       <div style={{ height: 1, background: "var(--color-border)", margin: "4px 0" }} />
 
-                      <button
-                        type="button"
+                      <Button
+                        variant="menu-danger"
+                        icon={<LogOut size={13} />}
+                        label={t("nav.logout")}
                         onClick={handleLogout}
-                        style={{
-                          width: "100%", display: "flex", alignItems: "center", gap: 9,
-                          padding: "8px 16px", textDecoration: "none",
-                          border: "none",
-                          background: "none",
-                          fontSize: 13, fontWeight: 500, color: "var(--color-danger)",
-                          textAlign: "left",
-                          cursor: "pointer",
-                          transition: "background 0.15s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.08)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-                      >
-                        <LogOut size={13} />
-                        {t("nav.logout")}
-                      </button>
+                      />
                     </div>
                   </div>
                 )}
@@ -218,8 +194,6 @@ export function TopNav() {
           )}
         </div>
       </nav>
-
-      {token && <NotificationSidebar open={notifOpen} onClose={() => setNotifOpen(false)} />}
     </>
   );
 }

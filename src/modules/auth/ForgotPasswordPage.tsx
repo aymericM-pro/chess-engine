@@ -1,32 +1,27 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { ArrowLeft, Crown, Mail, MailCheck } from "lucide-react";
-import { forgotPasswordSchema, getFieldErrors, type FieldErrors } from "@/shared/validation/formSchemas";
+import { Button } from "@/shared/components/Button";
+import { forgotPasswordSchema } from "@/shared/validation/formSchemas";
+import { useZodForm } from "@/shared/validation/useZodForm";
 import { useToastStore } from "@/shared/toasts/toastStore";
 import { authApi } from "@/shared/api/auth.api";
 import { getErrorMessage } from "@/shared/api/errorMessage";
 
-type ForgotPasswordField = "email";
-
 export function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState<FieldErrors<ForgotPasswordField>>({});
   const [loading, setLoading] = useState(false);
+  const { errors, clearFieldError, validate } = useZodForm<typeof forgotPasswordSchema>();
   const addToast = useToastStore((state) => state.addToast);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = forgotPasswordSchema.safeParse({ email });
-    if (!parsed.success) {
-      setErrors(getFieldErrors<ForgotPasswordField>(parsed.error));
-      return;
-    }
+    const parsed = validate(forgotPasswordSchema, { email });
+    if (!parsed) return;
 
-    setErrors({});
     setLoading(true);
     try {
-      await authApi.forgotPassword(parsed.data);
+      await authApi.forgotPassword(parsed);
       setSent(true);
       addToast({
         type: "success",
@@ -77,7 +72,7 @@ export function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    setErrors((current) => ({ ...current, email: undefined }));
+                    clearFieldError("email");
                   }}
                   style={{ width: "100%", padding: "12px 14px", borderRadius: 8, background: "#1c1c24", border: `1px solid ${errors.email ? "var(--color-danger)" : "#2e2e38"}`, color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
                   onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(201,169,110,0.5)")}
@@ -89,20 +84,21 @@ export function ForgotPasswordPage() {
                   </p>
                 )}
               </div>
-              <button type="submit" disabled={loading} style={{ padding: "13px", borderRadius: 8, border: "none", background: "#c9a96e", color: "#0d1117", fontSize: 15, fontWeight: 700, cursor: loading ? "wait" : "pointer", opacity: loading ? 0.7 : 1, transition: "opacity 0.15s" }}
-                onMouseEnter={(e) => { if (!loading) e.currentTarget.style.opacity = "0.88"; }}
-                onMouseLeave={(e) => { if (!loading) e.currentTarget.style.opacity = "1"; }}>
-                {loading ? "Envoi…" : "Envoyer le lien"}
-              </button>
+              <Button
+                variant="auth-primary"
+                type="submit"
+                disabled={loading}
+                label={loading ? "Envoi…" : "Envoyer le lien"}
+              />
             </form>
 
             <div style={{ marginTop: 24, textAlign: "center" }}>
-              <Link to="/login" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#888", textDecoration: "none", transition: "color 0.15s" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#888")}>
-                <ArrowLeft size={14} />
-                Retour à la connexion
-              </Link>
+              <Button
+                to="/login"
+                variant="auth-muted-link"
+                icon={<ArrowLeft size={14} />}
+                label="Retour à la connexion"
+              />
             </div>
           </div>
         ) : (
@@ -114,12 +110,13 @@ export function ForgotPasswordPage() {
             <p style={{ fontSize: 13, color: "#666", lineHeight: 1.7, marginBottom: 32 }}>
               Si un compte correspond à cette adresse, un email de réinitialisation vient d&apos;être envoyé. Vérifiez vos spams si besoin.
             </p>
-            <Link to="/login" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "11px 24px", borderRadius: 8, background: "#c9a96e", color: "#0d1117", fontWeight: 700, fontSize: 14, textDecoration: "none", transition: "opacity 0.15s" }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}>
-              <ArrowLeft size={14} />
-              Retour à la connexion
-            </Link>
+            <Button
+              to="/login"
+              variant="auth-primary"
+              className="w-auto px-6 py-[11px] text-sm"
+              icon={<ArrowLeft size={14} />}
+              label="Retour à la connexion"
+            />
           </div>
         )}
       </div>

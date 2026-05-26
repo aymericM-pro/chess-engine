@@ -1,4 +1,4 @@
-import { Bell, Check, Loader2, UserCheck, UserRoundPlus, X } from 'lucide-react'
+import { Bell, Check, CircleX, Loader2, UserCheck, UserRoundPlus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useGameInviteStore, type FriendNotification, type GameInvite } from '@/modules/gameInvites/gameInviteStore'
@@ -7,52 +7,16 @@ import { notificationsApi } from '@/shared/api/notifications.api'
 import { getErrorMessage } from '@/shared/api/errorMessage'
 import { useToastStore } from '@/shared/toasts/toastStore'
 import { IconTile } from '@/shared/components/IconTile'
+import { Button } from '@/shared/components/Button'
+import { useSidebar, type SidebarContentProps } from '@/shared/components/Sidebar'
 
-interface Props {
-  open: boolean
-  onClose: () => void
-}
-
-export function NotificationSidebar({ open, onClose }: Props) {
+export function NotificationSidebar({ closeSidebar }: SidebarContentProps) {
   const invites = useGameInviteStore((state) => state.invites)
   const friendNotifications = useGameInviteStore((state) => state.friendNotifications)
-  const markAllAsRead = useGameInviteStore((state) => state.markAllAsRead)
   const hasNotifications = invites.length > 0 || friendNotifications.length > 0
-
-  const handleClose = () => {
-    markAllAsRead()
-    void notificationsApi.markAllAsRead().catch(() => undefined)
-    onClose()
-  }
 
   return (
     <>
-      <div
-        className={`fixed inset-0 z-[150] transition-opacity duration-300 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        style={{ background: 'rgba(0,0,0,0.4)' }}
-        onClick={handleClose}
-      />
-
-      <div
-        className={`fixed right-0 top-0 bottom-0 z-[200] flex w-[min(460px,100vw)] flex-col transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
-        style={{ background: 'var(--color-bg-2)', borderLeft: '1px solid var(--color-border)' }}
-      >
-        <div
-          className="flex flex-shrink-0 items-center justify-between px-7 py-5"
-          style={{ borderBottom: '1px solid var(--color-border)' }}
-        >
-          <span className="font-display text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-text-primary">
-            Notifications
-          </span>
-          <button
-            onClick={handleClose}
-            className="-mr-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#7d8490] transition-[background,color] duration-150 hover:bg-black/[0.18] hover:text-[#c6ccd5]"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
           {!hasNotifications ? (
             <div className="flex min-h-full items-center justify-center px-7 py-10 text-center">
               <div className="max-w-[260px]">
@@ -70,26 +34,37 @@ export function NotificationSidebar({ open, onClose }: Props) {
           ) : (
             <>
               {invites.map((invite) => (
-                <GameInviteItem key={invite.gameId} invite={invite} onClose={handleClose} />
+                <GameInviteItem key={invite.gameId} invite={invite} onClose={closeSidebar} />
               ))}
               {friendNotifications.map((notification) => (
-                <FriendNotificationItem key={notification.id} notification={notification} onClose={handleClose} />
+                <FriendNotificationItem key={notification.id} notification={notification} onClose={closeSidebar} />
               ))}
             </>
           )}
-        </div>
-
-        <div
-          className="flex-shrink-0 px-7 py-4"
-          style={{ borderTop: '1px solid var(--color-border)' }}
-        >
-          <span className="font-display text-[0.58rem] font-semibold tracking-[0.1em] uppercase text-text-muted">
-            Centre de notifications
-          </span>
-        </div>
-      </div>
     </>
   )
+}
+
+export function useOpenNotificationSidebar() {
+  const { openSidebar } = useSidebar()
+  const markAllAsRead = useGameInviteStore((state) => state.markAllAsRead)
+
+  return () => openSidebar(NotificationSidebar, {}, {
+    title: "Notifications",
+    closeIcon: <CircleX size={18} />,
+    closeLabel: "Fermer les notifications",
+    width: 460,
+    bodyClassName: "p-0",
+    footer: (
+      <span className="font-display text-[0.58rem] font-semibold tracking-[0.1em] uppercase text-text-muted">
+        Centre de notifications
+      </span>
+    ),
+    onClose: () => {
+      markAllAsRead()
+      void notificationsApi.markAllAsRead().catch(() => undefined)
+    },
+  })
 }
 
 function FriendNotificationItem({ notification, onClose }: { notification: FriendNotification; onClose: () => void }) {
@@ -127,14 +102,13 @@ function FriendNotificationItem({ notification, onClose }: { notification: Frien
         <p className="font-serif text-[0.86rem] font-semibold leading-snug text-[var(--color-text-muted)]">
           {message}
         </p>
-        <button
-          type="button"
+        <Button
+          variant="play-rules"
           onClick={handleOpen}
-          className="mt-1 flex h-9 w-fit cursor-pointer items-center gap-2 rounded-lg border border-[rgba(201,169,110,0.34)] bg-[rgba(201,169,110,0.12)] px-3 text-xs font-black text-[var(--color-gold)] transition hover:bg-[rgba(201,169,110,0.18)]"
-        >
-          <Check size={14} />
-          Voir les amis
-        </button>
+          className="mt-1 h-9 w-fit px-3 text-xs font-black"
+          icon={<Check size={14} />}
+          label="Voir les amis"
+        />
       </div>
     </div>
   )
@@ -182,15 +156,14 @@ function GameInviteItem({ invite, onClose }: { invite: GameInvite; onClose: () =
         <p className="font-serif text-[0.86rem] font-semibold leading-snug text-[var(--color-text-muted)]">
           {invite.from.username} vous invite à jouer une partie en ligne.
         </p>
-        <button
-          type="button"
+        <Button
+          variant="play-rules"
           disabled={accepting}
           onClick={handleAccept}
-          className="mt-1 flex h-9 w-fit cursor-pointer items-center gap-2 rounded-lg border border-[rgba(201,169,110,0.34)] bg-[rgba(201,169,110,0.12)] px-3 text-xs font-black text-[var(--color-gold)] transition hover:bg-[rgba(201,169,110,0.18)] disabled:cursor-default disabled:opacity-60"
-        >
-          {accepting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-          Rejoindre
-        </button>
+          className="mt-1 h-9 w-fit px-3 text-xs font-black disabled:cursor-default disabled:opacity-60"
+          icon={accepting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+          label="Rejoindre"
+        />
       </div>
     </div>
   )

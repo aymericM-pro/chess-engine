@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { Crown, Eye, EyeOff, Settings, Swords, TrendingUp } from "lucide-react";
+import { Button } from "@/shared/components/Button";
 
 type Mode = "login" | "register";
 
@@ -26,11 +26,13 @@ function PasswordInput({ label, placeholder }: { label: string; placeholder?: st
         <input type={visible ? "text" : "password"} placeholder={placeholder ?? "••••••••"} style={{ ...inputStyle, paddingRight: 44 }}
           onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(201,169,110,0.5)")}
           onBlur={(e) => (e.currentTarget.style.borderColor = "#2e2e38")} />
-        <button type="button" onClick={() => setVisible((v) => !v)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#555", display: "flex", padding: 4, transition: "color 0.15s" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#aaa")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#555")}>
+        <Button
+          variant="auth-input-icon"
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+        >
           {visible ? <EyeOff size={15} /> : <Eye size={15} />}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -54,18 +56,20 @@ function LoginForm() {
       <div>
         <PasswordInput label="Mot de passe" />
         <div style={{ textAlign: "right", marginTop: 8 }}>
-          <Link to="/forgot-password" style={{ fontSize: 12, color: "#c9a96e", textDecoration: "none" }}
-            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>
-            Mot de passe oublié ?
-          </Link>
+          <Button
+            to="/forgot-password"
+            variant="auth-link"
+            className="text-xs"
+            label="Mot de passe oublié ?"
+          />
         </div>
       </div>
-      <button type="submit" style={{ padding: "13px", borderRadius: 8, border: "none", background: "#c9a96e", color: "#0d1117", fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "opacity 0.15s", marginTop: 4 }}
-        onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}>
-        Se connecter
-      </button>
+      <Button
+        variant="auth-primary"
+        type="submit"
+        className="mt-1"
+        label="Se connecter"
+      />
     </form>
   );
 }
@@ -87,11 +91,11 @@ function RegisterForm() {
           J&apos;accepte les <a href="#" style={{ color: "#c9a96e", textDecoration: "none" }}>conditions d&apos;utilisation</a> et la <a href="#" style={{ color: "#c9a96e", textDecoration: "none" }}>politique de confidentialité</a>
         </span>
       </label>
-      <button type="submit" style={{ padding: "13px", borderRadius: 8, border: "none", background: "#c9a96e", color: "#0d1117", fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "opacity 0.15s" }}
-        onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}>
-        Créer mon compte
-      </button>
+      <Button
+        variant="auth-primary"
+        type="submit"
+        label="Créer mon compte"
+      />
     </form>
   );
 }
@@ -142,9 +146,13 @@ export function AuthPage() {
         {/* Tab switcher */}
         <div style={{ display: "flex", background: "#1a1a22", borderRadius: 10, padding: 4, marginBottom: 36, border: "1px solid #2e2e38" }}>
           {(["login", "register"] as Mode[]).map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: "10px", borderRadius: 7, border: "none", background: mode === m ? "#c9a96e" : "none", color: mode === m ? "#0d1117" : "#888", fontSize: 14, fontWeight: mode === m ? 700 : 400, cursor: "pointer", transition: "all 0.2s" }}>
-              {m === "login" ? "Connexion" : "Inscription"}
-            </button>
+            <Button
+              key={m}
+              variant="auth-tab"
+              className={mode === m ? "bg-[var(--color-gold)] font-bold text-[#0d1117]" : "bg-transparent font-normal text-[var(--color-text-muted)]"}
+              onClick={() => setMode(m)}
+              label={m === "login" ? "Connexion" : "Inscription"}
+            />
           ))}
         </div>
 
@@ -163,9 +171,12 @@ export function AuthPage() {
 
         <p style={{ fontSize: 12, color: "#555", textAlign: "center", marginTop: 28 }}>
           {mode === "login" ? "Pas encore de compte ? " : "Déjà un compte ? "}
-          <button onClick={() => setMode(mode === "login" ? "register" : "login")} style={{ background: "none", border: "none", color: "#c9a96e", fontSize: 12, cursor: "pointer", padding: 0, textDecoration: "underline" }}>
-            {mode === "login" ? "S'inscrire" : "Se connecter"}
-          </button>
+          <Button
+            variant="auth-link"
+            className="text-xs underline"
+            onClick={() => setMode(mode === "login" ? "register" : "login")}
+            label={mode === "login" ? "S'inscrire" : "Se connecter"}
+          />
         </p>
       </div>
     </div>

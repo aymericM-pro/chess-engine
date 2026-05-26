@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react'
 import { useToastStore, type Toast, type ToastType } from './toastStore'
+import { Button } from '@/shared/components/Button'
 
 const TOAST_TONE: Record<ToastType, { color: string; bg: string; border: string; icon: ReactNode }> = {
   success: {
@@ -89,36 +90,15 @@ function ToastItem({ toast }: { toast: Toast }) {
           </div>
         )}
       </div>
-      <button
-        type="button"
+      <Button
+        variant="compact-icon"
         onClick={() => removeToast(toast.id)}
         aria-label="Fermer la notification"
         title="Fermer"
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: 7,
-          border: 'none',
-          background: 'transparent',
-          color: isError ? 'rgba(255,255,255,0.82)' : 'var(--color-text-muted)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 0,
-          flexShrink: 0,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = isError ? 'rgba(255,255,255,0.16)' : 'var(--color-bg-3)'
-          e.currentTarget.style.color = isError ? '#fff' : 'var(--color-text-primary)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent'
-          e.currentTarget.style.color = isError ? 'rgba(255,255,255,0.82)' : 'var(--color-text-muted)'
-        }}
+        className={`h-7 w-7 rounded-[7px] ${isError ? 'text-white/80 hover:bg-white/15 hover:text-white' : ''}`}
       >
         <X size={15} strokeWidth={2.2} />
-      </button>
+      </Button>
       <div
         style={{
           position: 'absolute',

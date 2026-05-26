@@ -6,6 +6,7 @@ import { BoardHeader } from "./components/BoardHeader";
 import { PlayerBar } from "@/modules/replay/components/PlayerBar";
 import { clickCell, promote, INITIAL_STATE } from "./engine/boardGame";
 import type { PromotionPieceType } from "./engine/boardGame";
+import { Button } from "@/shared/components/Button";
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
 const labelStyle: React.CSSProperties = {
@@ -53,21 +54,18 @@ export function Board() {
             </p>
             <div className="flex gap-3">
               {PROMOTION_PIECES.map((pt) => (
-                <button
+                <Button
                   key={pt}
                   onClick={() => setGameState((s) => promote(s, pt))}
-                  className="w-16 h-16 flex items-center justify-center rounded-xl border cursor-pointer transition-colors duration-150 hover:border-gold"
-                  style={{
-                    background: "var(--color-bg-2)",
-                    border: "1px solid var(--color-border)",
-                  }}
+                  variant="tile"
+                  className="h-16 w-16 p-0"
                 >
                   <PieceSVG
                     type={pt as PieceType}
                     color={pendingPromotion.color}
                     size={44}
                   />
-                </button>
+                </Button>
               ))}
             </div>
           </div>

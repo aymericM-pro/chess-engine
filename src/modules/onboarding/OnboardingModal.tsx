@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Crown, MonitorCog, Users, Trophy, CircleCheck } from "lucide-react";
+import { Button } from "@/shared/components/Button";
 
 interface OnboardingModalProps {
   onClose: () => void;
@@ -227,24 +228,12 @@ function Step3({ onClose }: { onClose: () => void }) {
           </div>
         ))}
       </div>
-      <button
+      <Button
+        variant="play-primary"
         onClick={onClose}
-        style={{
-          width: "100%",
-          padding: "16px 0",
-          background: "var(--color-accent)",
-          color: "#000",
-          border: "none",
-          borderRadius: 12,
-          fontFamily: "var(--font-sans)",
-          fontWeight: 700,
-          fontSize: "1.05rem",
-          cursor: "pointer",
-          letterSpacing: "0.02em",
-        }}
-      >
-        C&apos;est parti !
-      </button>
+        className="py-4 font-sans text-[1.05rem] text-black"
+        label="C'est parti !"
+      />
     </div>
   );
 }
@@ -295,24 +284,12 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
           }}
         >
           {/* Skip button */}
-          <button
+          <Button
+            variant="auth-muted-link"
             onClick={onClose}
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 24,
-              background: "transparent",
-              border: "none",
-              color: "var(--color-text-muted)",
-              fontFamily: "var(--font-sans)",
-              fontSize: "0.9rem",
-              cursor: "pointer",
-              padding: "4px 8px",
-              borderRadius: 6,
-            }}
-          >
-            Passer
-          </button>
+            className="absolute right-6 top-5 rounded-md px-2 py-1 font-sans text-[0.9rem]"
+            label="Passer"
+          />
 
           {/* Step content */}
           <div
@@ -339,23 +316,12 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
             }}
           >
             {!isLast && (
-              <button
+              <Button
+                variant="profile-outline"
                 onClick={() => setStep((s) => s - 1)}
-                style={{
-                  background: step === 0 ? "transparent" : "var(--color-bg-3)",
-                  color: step === 0 ? "transparent" : "var(--color-text-primary)",
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "11px 22px",
-                  fontFamily: "var(--font-sans)",
-                  fontSize: "0.9rem",
-                  fontWeight: 500,
-                  cursor: step === 0 ? "default" : "pointer",
-                  pointerEvents: step === 0 ? "none" : "auto",
-                }}
-              >
-                Précédent
-              </button>
+                className={`border-none px-[22px] py-[11px] font-sans text-[0.9rem] ${step === 0 ? "pointer-events-none bg-transparent text-transparent" : "bg-[var(--color-bg-3)] text-[var(--color-text-primary)]"}`}
+                label="Précédent"
+              />
             )}
 
             {/* Dots */}
@@ -375,23 +341,12 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
             </div>
 
             {!isLast && (
-              <button
+              <Button
+                variant="play-primary"
                 onClick={() => setStep((s) => s + 1)}
-                style={{
-                  background: "var(--color-accent)",
-                  color: "#000",
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "11px 22px",
-                  fontFamily: "var(--font-sans)",
-                  fontSize: "0.9rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  letterSpacing: "0.01em",
-                }}
-              >
-                Suivant
-              </button>
+                className="w-auto rounded-[10px] px-[22px] py-[11px] font-sans text-[0.9rem] text-black"
+                label="Suivant"
+              />
             )}
           </div>
         </div>

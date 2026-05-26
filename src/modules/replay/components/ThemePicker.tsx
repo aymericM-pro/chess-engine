@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useReplayStore } from '../store/replayStore'
 import { THEMES } from '../data/themes'
+import { Button } from '@/shared/components/Button'
 
 export function ThemePicker() {
   const { t } = useTranslation()
@@ -28,11 +29,12 @@ export function ThemePicker() {
         {THEMES.map((theme) => {
           const isActive = theme.id === themeId
           return (
-            <button
+            <Button
               key={theme.id}
               onClick={() => setTheme(theme.id)}
               title={theme.name}
-              className="flex flex-col items-center gap-[6px] cursor-pointer border-none bg-none p-0 transition-transform duration-150 hover:scale-[1.06]"
+              variant="nav-avatar"
+              className="flex-col gap-[6px] rounded-none hover:scale-[1.06]"
             >
               <div
                 className="w-12 h-12 rounded-[5px] overflow-hidden grid flex-shrink-0 transition-[outline] duration-150"
@@ -60,7 +62,7 @@ export function ThemePicker() {
               >
                 {theme.name}
               </span>
-            </button>
+            </Button>
           )
         })}
       </div>

@@ -6,7 +6,9 @@ import { useReplayStore } from "@/modules/replay/store/replayStore";
 import { usersApi } from "@/shared/api/users.api";
 import { getErrorMessage } from "@/shared/api/errorMessage";
 import { useToastStore } from "@/shared/toasts/toastStore";
-import { changePasswordSchema, getFieldErrors, type FieldErrors } from "@/shared/validation/formSchemas";
+import { changePasswordSchema } from "@/shared/validation/formSchemas";
+import { useZodForm } from "@/shared/validation/useZodForm";
+import { Button } from "@/shared/components/Button";
 
 type Tab = "language" | "theme" | "notifications" | "security";
 
@@ -45,23 +47,16 @@ function LanguageTab() {
         {languages.map((lang) => {
           const active = i18n.language === lang.code;
           return (
-            <button
+            <Button
               key={lang.code}
               onClick={() => i18n.changeLanguage(lang.code)}
-              style={{
-                display: "flex", alignItems: "center", gap: 14,
-                padding: "14px 18px", borderRadius: 10, cursor: "pointer",
-                background: active ? "rgba(201,169,110,0.08)" : "var(--color-bg-3)",
-                border: `1px solid ${active ? "rgba(201,169,110,0.4)" : "var(--color-border)"}`,
-                color: active ? "var(--color-gold)" : "var(--color-text-primary)",
-                fontSize: 14, fontWeight: active ? 600 : 400,
-                transition: "all 0.15s", textAlign: "left",
-              }}
+              variant="choice-row"
+              className={active ? "border-[rgba(201,169,110,0.4)] bg-[rgba(201,169,110,0.08)] font-semibold text-[var(--color-gold)]" : ""}
             >
               <span style={{ fontSize: 22 }}>{lang.flag}</span>
               <span>{lang.label}</span>
               {active && <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--color-gold)", letterSpacing: "0.06em" }}>ACTIF</span>}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -80,16 +75,11 @@ function ThemeTab() {
         {THEMES.map((theme) => {
           const active = themeId === theme.id;
           return (
-            <button
+            <Button
               key={theme.id}
               onClick={() => setTheme(theme.id)}
-              style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-                padding: "14px 10px", borderRadius: 10, cursor: "pointer",
-                background: active ? "rgba(201,169,110,0.08)" : "var(--color-bg-3)",
-                border: `1px solid ${active ? "rgba(201,169,110,0.4)" : "var(--color-border)"}`,
-                transition: "all 0.15s",
-              }}
+              variant="choice-card"
+              className={active ? "border-[rgba(201,169,110,0.4)] bg-[rgba(201,169,110,0.08)]" : ""}
             >
               {/* Mini board preview */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", width: 48, height: 48, borderRadius: 5, overflow: "hidden" }}>
@@ -100,7 +90,7 @@ function ThemeTab() {
               <span style={{ fontSize: 11, color: active ? "var(--color-gold)" : "var(--color-text-muted)", fontWeight: active ? 600 : 400, textAlign: "center" }}>
                 {theme.name}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -120,15 +110,10 @@ const NOTIF_OPTIONS: { key: NotifKey; label: string; desc: string }[] = [
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
-    <button
+    <Button
+      variant="switch"
       onClick={onChange}
-      style={{
-        width: 40, height: 22, borderRadius: 100, border: "none",
-        background: on ? "var(--color-gold)" : "var(--color-bg-3)",
-        cursor: "pointer", position: "relative", flexShrink: 0,
-        transition: "background 0.2s", padding: 0,
-        boxShadow: on ? "none" : "inset 0 0 0 1px var(--color-border)",
-      }}
+      className={on ? "bg-[var(--color-gold)] shadow-none" : ""}
     >
       <span style={{
         position: "absolute", top: 3, left: on ? 21 : 3,
@@ -136,7 +121,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
         background: on ? "#0d1117" : "var(--color-faint)",
         transition: "left 0.2s",
       }} />
-    </button>
+    </Button>
   );
 }
 
@@ -172,8 +157,6 @@ function NotificationsTab() {
   );
 }
 
-type PasswordField = "currentPassword" | "newPassword" | "confirmPassword";
-
 /* ── Password input with show/hide ── */
 function PasswordInput({
   label,
@@ -204,20 +187,13 @@ function PasswordInput({
           onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(201,169,110,0.5)")}
           onBlur={(e) => (e.currentTarget.style.borderColor = error ? "var(--color-danger)" : "var(--color-border)")}
         />
-        <button
+        <Button
+          variant="auth-input-icon"
           type="button"
           onClick={() => setVisible((v) => !v)}
-          style={{
-            position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-            background: "none", border: "none", cursor: "pointer", padding: 4,
-            color: "var(--color-text-muted)", display: "flex", alignItems: "center",
-            transition: "color 0.15s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
         >
           {visible ? <EyeOff size={16} /> : <Eye size={16} />}
-        </button>
+        </Button>
       </div>
       {error && (
         <p style={{ margin: "6px 0 0", color: "var(--color-danger)", fontSize: 12, lineHeight: 1.45 }}>
@@ -234,24 +210,20 @@ function SecurityTab() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState<FieldErrors<PasswordField>>({});
   const [savingPassword, setSavingPassword] = useState(false);
+  const { errors, clearFieldError, validate } = useZodForm<typeof changePasswordSchema>();
   const addToast = useToastStore((state) => state.addToast);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = changePasswordSchema.safeParse({ currentPassword, newPassword, confirmPassword });
-    if (!parsed.success) {
-      setErrors(getFieldErrors<PasswordField>(parsed.error));
-      return;
-    }
+    const parsed = validate(changePasswordSchema, { currentPassword, newPassword, confirmPassword });
+    if (!parsed) return;
 
-    setErrors({});
     setSavingPassword(true);
     try {
       await usersApi.changePassword({
-        currentPassword: parsed.data.currentPassword,
-        newPassword: parsed.data.newPassword,
+        currentPassword: parsed.currentPassword,
+        newPassword: parsed.newPassword,
       });
       setCurrentPassword("");
       setNewPassword("");
@@ -284,7 +256,7 @@ function SecurityTab() {
           error={errors.currentPassword}
           onChange={(value) => {
             setCurrentPassword(value);
-            setErrors((current) => ({ ...current, currentPassword: undefined, newPassword: undefined }));
+            clearFieldError("currentPassword", ["newPassword"]);
           }}
         />
         <PasswordInput
@@ -293,7 +265,7 @@ function SecurityTab() {
           error={errors.newPassword}
           onChange={(value) => {
             setNewPassword(value);
-            setErrors((current) => ({ ...current, newPassword: undefined, confirmPassword: undefined }));
+            clearFieldError("newPassword", ["confirmPassword"]);
           }}
         />
         <PasswordInput
@@ -302,24 +274,16 @@ function SecurityTab() {
           error={errors.confirmPassword}
           onChange={(value) => {
             setConfirmPassword(value);
-            setErrors((current) => ({ ...current, confirmPassword: undefined }));
+            clearFieldError("confirmPassword");
           }}
         />
-        <button
+        <Button
+          variant="small-primary"
           type="submit"
           disabled={savingPassword}
-          style={{
-            alignSelf: "flex-start", marginTop: 4,
-            padding: "10px 22px", borderRadius: 8, border: "none",
-            background: "var(--color-gold)", color: "#0d1117",
-            fontSize: 14, fontWeight: 600, cursor: savingPassword ? "wait" : "pointer",
-            transition: "opacity 0.15s", opacity: savingPassword ? 0.7 : 1,
-          }}
-          onMouseEnter={(e) => { if (!savingPassword) e.currentTarget.style.opacity = "0.85"; }}
-          onMouseLeave={(e) => { if (!savingPassword) e.currentTarget.style.opacity = "1"; }}
-        >
-          {savingPassword ? "Mise à jour…" : "Mettre à jour"}
-        </button>
+          className="self-start"
+          label={savingPassword ? "Mise à jour…" : "Mettre à jour"}
+        />
       </form>
 
       <Divider />
@@ -330,19 +294,11 @@ function SecurityTab() {
         Cette action est irréversible. Toutes vos parties, statistiques et données seront définitivement supprimées.
       </SectionDesc>
       {!showDelete ? (
-        <button
+        <Button
+          variant="small-danger"
           onClick={() => setShowDelete(true)}
-          style={{
-            padding: "10px 22px", borderRadius: 8,
-            background: "rgba(248,81,73,0.08)", border: "1px solid rgba(248,81,73,0.3)",
-            color: "var(--color-danger)", fontSize: 14, fontWeight: 600, cursor: "pointer",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.15)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.08)")}
-        >
-          Supprimer mon compte
-        </button>
+          label="Supprimer mon compte"
+        />
       ) : (
         <div style={{ background: "rgba(248,81,73,0.06)", border: "1px solid rgba(248,81,73,0.25)", borderRadius: 10, padding: "20px 24px", maxWidth: 400 }}>
           <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 14, lineHeight: 1.6 }}>
@@ -359,17 +315,17 @@ function SecurityTab() {
             }}
           />
           <div style={{ display: "flex", gap: 10 }}>
-            <button
+            <Button
+              variant="profile-outline"
               onClick={() => setShowDelete(false)}
-              style={{ padding: "9px 18px", borderRadius: 8, background: "none", border: "1px solid var(--color-border)", color: "var(--color-text-muted)", fontSize: 13, cursor: "pointer" }}
-            >
-              Annuler
-            </button>
-            <button
-              style={{ padding: "9px 18px", borderRadius: 8, background: "var(--color-danger)", border: "none", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-            >
-              Confirmer la suppression
-            </button>
+              className="px-[18px] py-[9px] text-[13px]"
+              label="Annuler"
+            />
+            <Button
+              variant="dialog-danger"
+              className="flex-none px-[18px] py-[9px] text-[13px]"
+              label="Confirmer la suppression"
+            />
           </div>
         </div>
       )}
@@ -411,25 +367,14 @@ export function SettingsPage() {
           {TABS.map((tab) => {
             const active = activeTab === tab.id;
             return (
-              <button
+              <Button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "12px 16px", border: "none",
-                  borderRadius: 8,
-                  background: active ? "rgba(201,169,110,0.10)" : "transparent",
-                  color: active ? "var(--color-gold)" : "var(--color-text-muted)",
-                  fontSize: 14, fontWeight: active ? 600 : 400,
-                  cursor: "pointer", textAlign: "left", width: "100%",
-                  transition: "background 0.15s, color 0.15s",
-                }}
-                onMouseEnter={(e) => { if (!active) { (e.currentTarget as HTMLElement).style.color = "var(--color-text-primary)"; (e.currentTarget as HTMLElement).style.background = "var(--color-bg-3)"; } }}
-                onMouseLeave={(e) => { if (!active) { (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)"; (e.currentTarget as HTMLElement).style.background = "transparent"; } }}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
+                variant="sidebar-tab"
+                className={active ? "bg-[rgba(201,169,110,0.10)] font-semibold text-[var(--color-gold)]" : ""}
+                icon={tab.icon}
+                label={tab.label}
+              />
             );
           })}
         </nav>

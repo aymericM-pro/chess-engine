@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Button } from "@/shared/components/Button";
 
 const pieces: Record<string, string> = {
   "00": "♜", "01": "♞", "02": "♝", "03": "♛", "04": "♚", "05": "♝", "06": "♞", "07": "♜",
@@ -52,14 +52,6 @@ const css = `
   .lp-nav-link::after { content:''; position:absolute; bottom:-2px; left:0; width:0; height:1px; background:var(--color-gold); transition:width 0.25s ease; }
   .lp-nav-link:hover { color:var(--color-gold); }
   .lp-nav-link:hover::after { width:100%; }
-  .lp-btn-ghost { font-size:15px; font-weight:600; color:#fff; background:none; border:1.5px solid var(--color-gold); border-radius:4px; padding:12px 28px; cursor:pointer; transition:color 0.2s,border-color 0.2s,background 0.2s; }
-  .lp-btn-ghost:hover { background:rgba(201,169,110,0.12); border-color:var(--color-accent-lt); }
-  .lp-btn-primary { background:var(--color-gold); color:#0a0a0a; border:1.5px solid var(--color-gold); border-radius:4px; padding:12px 28px; font-size:15px; font-weight:600; cursor:pointer; transition:background 0.2s; }
-  .lp-btn-primary:hover { background:var(--color-accent-lt); border-color:var(--color-accent-lt); }
-  .lp-btn-primary-lg { background:var(--color-gold); color:#0a0a0a; border:none; border-radius:4px; padding:12px 28px; font-size:15px; font-weight:600; cursor:pointer; transition:background 0.2s; }
-  .lp-btn-primary-lg:hover { background:var(--color-accent-lt); }
-  .lp-btn-outline { background:none; border:1.5px solid var(--color-border); color:#fff; border-radius:4px; padding:12px 28px; font-size:15px; font-weight:600; cursor:pointer; transition:border-color 0.2s,background 0.2s; }
-  .lp-btn-outline:hover { border-color:var(--color-faint); background:var(--color-bg-3); }
   .lp-feature-card { background:var(--color-bg-2); padding:36px 32px; transition:background 0.2s; display:flex; flex-direction:column; align-items:center; text-align:center; }
   .lp-feature-card:hover { background:var(--color-bg-3); }
   .lp-mode-card { background:var(--color-bg-2); border:1px solid var(--color-border); border-radius:12px; padding:36px 32px; transition:border-color 0.2s; display:flex; flex-direction:column; align-items:center; text-align:center; }
@@ -85,8 +77,8 @@ export function LandingPage() {
             Jouez en ligne, analysez avec Stockfish, progressez avec des leçons adaptées à votre niveau. Première partie en 48&nbsp;secondes.
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 16 }}>
-            <button className="lp-btn-primary-lg">Commencer à jouer</button>
-            <button className="lp-btn-outline">Voir une démo</button>
+            <Button variant="landing-primary" label="Commencer à jouer" />
+            <Button variant="landing-outline" label="Voir une démo" />
           </div>
           <p style={{ fontSize: 12, color: "var(--color-faint)" }}>7 jours gratuits · Annulation en 1 clic</p>
           <MiniBoard />
@@ -166,8 +158,8 @@ export function LandingPage() {
               Rejoignez 180&nbsp;000 joueurs qui progressent chaque jour sur ChessMaster.
             </p>
             <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
-              <button className="lp-btn-primary-lg">Créer un compte gratuit</button>
-              <button className="lp-btn-outline">Calculer ma progression</button>
+              <Button variant="landing-primary" label="Créer un compte gratuit" />
+              <Button variant="landing-outline" label="Calculer ma progression" />
             </div>
             <p style={{ marginTop: 20, fontSize: 12, color: "var(--color-faint)" }}>7 jours gratuits · Annulation en 1 clic pendant l&apos;essai</p>
           </div>
@@ -190,9 +182,7 @@ export function LandingPage() {
 
         {/* Lien vers l'app */}
         <div style={{ position: "fixed", bottom: 24, right: 24 }}>
-          <Link to="/replay" className="lp-btn-primary" style={{ textDecoration: "none", display: "inline-block" }}>
-            Ouvrir l&apos;app →
-          </Link>
+          <Button to="/replay" variant="landing-floating" label="Ouvrir l'app →" />
         </div>
 
       </div>

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useLiveGame } from "./hooks/useLiveGame";
+import { Button } from "@/shared/components/Button";
 
 export function LivePage() {
   const { t } = useTranslation();
@@ -16,14 +17,13 @@ export function LivePage() {
         </span>
       </div>
 
-      <button
+      <Button
+        variant="play-primary"
         onClick={sendPing}
         disabled={!connected}
-        className="px-8 py-3 rounded-xl font-display text-[0.7rem] font-semibold tracking-[0.12em] uppercase disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border-none"
-        style={{ background: "linear-gradient(135deg, #e6d5a0, #c8a95a)", color: "#0d1117" }}
-      >
-        {t("live.join_btn")}
-      </button>
+        className="px-8 py-3 font-display text-[0.7rem] uppercase disabled:cursor-not-allowed disabled:opacity-40"
+        label={t("live.join_btn")}
+      />
 
       <ul className="flex flex-col gap-2">
         {signals.length === 0 ? (

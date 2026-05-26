@@ -12,7 +12,9 @@ import { useAuthStore } from "@/modules/auth/store/authStore";
 import { getErrorMessage } from "@/shared/api/errorMessage";
 import { useToastStore } from "@/shared/toasts/toastStore";
 import type { GameResponseDto, PlayerResponseDto } from "@/shared/api/types";
-import { ChessRulesSidebar } from "@/modules/layout/components/ChessRulesSidebar";
+import { useOpenChessRulesSidebar } from "@/modules/layout/components/ChessRulesSidebar";
+import { Button } from "@/shared/components/Button";
+import { Dialog } from "@/shared/components/Dialog";
 
 /* ─── Types ─────────────────────────────────────────── */
 type GameMode = "cpu" | "online";
@@ -74,14 +76,13 @@ function TwoCol({ left, right }: { left: React.ReactNode; right: React.ReactNode
 /* ─── Shared back button ─────────────────────────────── */
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="profile-outline"
       onClick={onClick}
-      style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--color-bg-3)", border: "none", borderRadius: 8, padding: "7px 13px", fontSize: 13, fontWeight: 500, color: "var(--color-text-muted)", cursor: "pointer", transition: "all 0.15s", flexShrink: 0 }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--color-text-primary)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)"; }}
-    >
-      <ArrowLeft size={13} /> Retour
-    </button>
+      className="border-none bg-[var(--color-bg-3)] px-[13px] py-[7px] text-[13px] hover:text-[var(--color-text-primary)]"
+      icon={<ArrowLeft size={13} />}
+      label="Retour"
+    />
   );
 }
 
@@ -168,18 +169,13 @@ function ModeSelect({ onSelect }: { onSelect: (mode: GameMode) => void }) {
 	        {MODES.map((m) => {
 	          const isHov = hovered === m.id;
 	          return (
-	            <button
+	            <Button
 	              key={m.id}
               onClick={() => onSelect(m.id)}
               onMouseEnter={() => setHovered(m.id)}
 	              onMouseLeave={() => setHovered(null)}
-	              style={{
-	                display: "grid", gridTemplateColumns: "48px 1fr auto", alignItems: "center", gap: 16, padding: "18px 20px",
-	                borderRadius: 12, border: `1px solid ${isHov ? "rgba(201,169,110,0.38)" : "var(--color-border)"}`, cursor: "pointer", textAlign: "left",
-	                background: isHov ? "rgba(201,169,110,0.08)" : "var(--color-bg-3)",
-	                transition: "background 0.15s, border-color 0.15s, transform 0.15s",
-	                transform: isHov ? "translateY(-1px)" : "none",
-	              }}
+                variant="choice-row"
+	              className={`grid grid-cols-[48px_1fr_auto] gap-4 rounded-xl px-5 py-[18px] ${isHov ? "-translate-y-px border-[rgba(201,169,110,0.38)] bg-[rgba(201,169,110,0.08)]" : ""}`}
 	            >
 	              <div style={{ width: 48, height: 48, borderRadius: 12, background: isHov ? "rgba(201,169,110,0.15)" : "var(--color-bg-2)", display: "flex", alignItems: "center", justifyContent: "center", color: isHov ? "var(--color-gold)" : "var(--color-text-muted)", flexShrink: 0, transition: "all 0.15s" }}>
 	                {m.icon}
@@ -199,7 +195,7 @@ function ModeSelect({ onSelect }: { onSelect: (mode: GameMode) => void }) {
 	                <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 100, background: isHov ? "rgba(201,169,110,0.15)" : "var(--color-bg-2)", color: isHov ? "var(--color-gold)" : "var(--color-text-muted)", transition: "all 0.15s" }}>{m.tag}</span>
 	                <ChevronRight size={16} color={isHov ? "var(--color-gold)" : "var(--color-faint)"} style={{ transition: "color 0.15s" }} />
 	              </div>
-	            </button>
+	            </Button>
 	          );
 	        })}
 	      </div>
@@ -430,28 +426,12 @@ function OnlineSetup({ onBack, onStart }: { onBack: () => void; onStart: (cfg: G
             )}
 
             {!playersLoading && matchingPlayers.map((player) => (
-              <button
+              <Button
                 key={player.id}
-                type="button"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => selectOpponent(player)}
-                style={{
-                  width: "100%",
-                  minHeight: 52,
-                  border: "none",
-                  borderBottom: "1px solid var(--color-border)",
-                  background: selectedOpponent?.id === player.id ? "rgba(201,169,110,0.10)" : "transparent",
-                  color: "var(--color-text-primary)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  padding: "10px 13px",
-                  textAlign: "left",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.045)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = selectedOpponent?.id === player.id ? "rgba(201,169,110,0.10)" : "transparent")}
+                variant="profile-option"
+                className={`min-h-[52px] justify-between rounded-none border-b border-[var(--color-border)] hover:bg-white/[0.045] ${selectedOpponent?.id === player.id ? "bg-[rgba(201,169,110,0.10)] hover:bg-[rgba(201,169,110,0.10)]" : ""}`}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                   <span style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg, #d7c07e, #ae824d)", color: "#101217", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, flexShrink: 0 }}>
@@ -467,20 +447,18 @@ function OnlineSetup({ onBack, onStart }: { onBack: () => void; onStart: (cfg: G
                     Sélectionné
                   </span>
                 )}
-              </button>
+              </Button>
             ))}
           </div>
         )}
       </div>
-      <button
+      <Button
+        variant="play-primary"
         onClick={handleSend}
         disabled={!canSend}
-        style={{ width: "100%", padding: "13px", borderRadius: 10, border: "none", background: canSend ? "var(--color-gold)" : "var(--color-bg-3)", color: canSend ? "#0d1117" : "var(--color-faint)", fontSize: 14, fontWeight: 700, cursor: canSend ? "pointer" : "not-allowed", transition: "opacity 0.15s" }}
-        onMouseEnter={(e) => { if (canSend) (e.currentTarget.style.opacity = "0.88"); }}
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-      >
-        {loading ? "Création…" : "Envoyer la demande"}
-      </button>
+        className="rounded-[10px] p-[13px] text-sm disabled:cursor-not-allowed disabled:text-[var(--color-faint)]"
+        label={loading ? "Création…" : "Envoyer la demande"}
+      />
       {error && <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--color-danger)" }}>{error}</p>}
     </>
   ) : (
@@ -492,14 +470,12 @@ function OnlineSetup({ onBack, onStart }: { onBack: () => void; onStart: (cfg: G
       <p style={{ fontSize: 13, color: "var(--color-text-muted)", lineHeight: 1.65, maxWidth: 280 }}>
         En attente d'acceptation. La partie démarrera automatiquement.
       </p>
-      <button
+      <Button
+        variant="profile-outline"
         onClick={() => { setSent(false); setUsername(""); setSelectedOpponent(null); }}
-        style={{ marginTop: 8, background: "var(--color-bg-3)", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 500, color: "var(--color-text-muted)", cursor: "pointer", transition: "color 0.15s" }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
-      >
-        Inviter quelqu'un d'autre
-      </button>
+        className="mt-2 border-none bg-[var(--color-bg-3)] px-5 py-[9px] text-[13px] hover:text-[var(--color-text-primary)]"
+        label="Inviter quelqu'un d'autre"
+      />
     </div>
   );
 
@@ -530,17 +506,12 @@ function OptionRow({ active, onClick, icon, label, sub }: { active: boolean; onC
   const [hov, setHov] = useState(false);
   const highlight = active || hov;
   return (
-    <button
+    <Button
+      variant="choice-row"
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      style={{
-        display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 12,
-        border: "none", cursor: "pointer", textAlign: "left", width: "100%",
-        background: active ? "rgba(201,169,110,0.10)" : hov ? "rgba(201,169,110,0.05)" : "var(--color-bg-3)",
-        transition: "background 0.15s",
-        boxShadow: active ? "inset 0 0 0 1.5px var(--color-gold)" : "none",
-      }}
+      className={`gap-3.5 rounded-xl border-none px-4 py-3.5 ${active ? "bg-[rgba(201,169,110,0.10)] shadow-[inset_0_0_0_1.5px_var(--color-gold)]" : hov ? "bg-[rgba(201,169,110,0.05)]" : ""}`}
     >
       <div style={{ width: 38, height: 38, borderRadius: 10, background: active ? "rgba(201,169,110,0.18)" : "var(--color-bg-2)", display: "flex", alignItems: "center", justifyContent: "center", color: highlight ? "var(--color-gold)" : "var(--color-text-muted)", flexShrink: 0, transition: "all 0.15s" }}>
         {icon}
@@ -550,7 +521,7 @@ function OptionRow({ active, onClick, icon, label, sub }: { active: boolean; onC
         <div style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: 1 }}>{sub}</div>
       </div>
       {active && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--color-gold)", flexShrink: 0 }} />}
-    </button>
+    </Button>
   );
 }
 
@@ -647,9 +618,14 @@ function SetupScreen({ onStart, onBack }: { onStart: (cfg: GameConfig, gameId: s
           {TIME_CONTROLS.map((tc) => {
             const active = timeControl.label === tc.label;
             return (
-              <button key={tc.label} onClick={() => setTimeControl(tc)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, border: "none", fontSize: 13, fontWeight: active ? 600 : 400, cursor: "pointer", transition: "all 0.15s", background: active ? "rgba(201,169,110,0.10)" : "var(--color-bg-3)", color: active ? "var(--color-gold)" : "var(--color-text-muted)", boxShadow: active ? "inset 0 0 0 1.5px var(--color-gold)" : "none" }}>
-                {TC_ICONS[tc.label]}{tc.label}
-              </button>
+              <Button
+                key={tc.label}
+                onClick={() => setTimeControl(tc)}
+                variant="profile-outline"
+                className={`gap-1.5 border-none px-3.5 py-2 text-[13px] ${active ? "bg-[rgba(201,169,110,0.10)] font-semibold text-[var(--color-gold)] shadow-[inset_0_0_0_1.5px_var(--color-gold)]" : "bg-[var(--color-bg-3)] font-normal"}`}
+                icon={TC_ICONS[tc.label]}
+                label={tc.label}
+              />
             );
           })}
         </div>
@@ -657,7 +633,8 @@ function SetupScreen({ onStart, onBack }: { onStart: (cfg: GameConfig, gameId: s
 
       {/* CTA */}
       {error && <p style={{ fontSize: 13, color: "var(--color-danger)", margin: "0 0 8px" }}>{error}</p>}
-      <button
+      <Button
+        variant="play-primary"
         disabled={loading}
         onClick={async () => {
           setError(null);
@@ -689,12 +666,10 @@ function SetupScreen({ onStart, onBack }: { onStart: (cfg: GameConfig, gameId: s
             setLoading(false);
           }
         }}
-        style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: loading ? "var(--color-bg-3)" : "var(--color-gold)", color: loading ? "var(--color-text-muted)" : "#0d1117", fontSize: 15, fontWeight: 700, cursor: loading ? "wait" : "pointer", transition: "opacity 0.15s", letterSpacing: "0.02em", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: "auto" }}
-        onMouseEnter={(e) => { if (!loading) e.currentTarget.style.opacity = "0.88"; }}
-        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-      >
-        <Swords size={16} strokeWidth={2} /> {loading ? "Création…" : "Jouer"}
-      </button>
+        className="mt-auto"
+        icon={<Swords size={16} strokeWidth={2} />}
+        label={loading ? "Création…" : "Jouer"}
+      />
     </>
   );
 
@@ -707,31 +682,33 @@ type DialogType = "resign" | "draw";
 function ConfirmDialog({ type, onConfirm, onCancel }: { type: DialogType; onConfirm: () => void; onCancel: () => void }) {
   const isResign = type === "resign";
   return (
-    <div onClick={onCancel} style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "var(--color-bg-2)", border: "1px solid var(--color-border)", borderRadius: 14, padding: "32px 36px", width: 380, boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}>
-        <div style={{ marginBottom: 12 }}>{isResign ? <Flag size={28} color="var(--color-danger)" strokeWidth={1.5} /> : <Handshake size={28} color="var(--color-gold)" strokeWidth={1.5} />}</div>
-        <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 8 }}>
-          {isResign ? "Abandonner la partie ?" : "Proposer la nulle ?"}
-        </div>
-        <p style={{ fontSize: 14, color: "var(--color-text-muted)", marginBottom: 28, lineHeight: 1.65 }}>
-          {isResign
-            ? "Vous concédez la victoire à l'adversaire. Cette action est irréversible."
-            : "Votre adversaire recevra la proposition en temps réel. En cas de refus, la partie continue."}
-        </p>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={onCancel} style={{ flex: 1, padding: "10px", borderRadius: 8, background: "none", border: "1px solid var(--color-border)", color: "var(--color-text-muted)", fontSize: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-faint)")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}>
-            Annuler
-          </button>
-          <button onClick={onConfirm} style={{ flex: 1, padding: "10px", borderRadius: 8, border: "none", background: isResign ? "var(--color-danger)" : "var(--color-gold)", color: isResign ? "#fff" : "#0d1117", fontSize: 14, fontWeight: 700, cursor: "pointer", transition: "opacity 0.15s" }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}>
-            {isResign ? "Abandonner" : "Proposer"}
-          </button>
-        </div>
-      </div>
-    </div>
+    <Dialog
+      title={isResign ? "Abandonner la partie ?" : "Proposer la nulle ?"}
+      description={
+        isResign
+          ? "Vous concédez la victoire à l'adversaire. Cette action est irréversible."
+          : "Votre adversaire recevra la proposition en temps réel. En cas de refus, la partie continue."
+      }
+      icon={isResign ? <Flag size={28} color="var(--color-danger)" strokeWidth={1.5} /> : <Handshake size={28} color="var(--color-gold)" strokeWidth={1.5} />}
+      onClose={onCancel}
+      width={380}
+      footerClassName="flex gap-2.5 px-7 pb-7"
+      footer={
+        <>
+          <Button
+            variant="profile-outline"
+            onClick={onCancel}
+            className="flex-1 justify-center px-4 py-2.5"
+            label="Annuler"
+          />
+          <Button
+            variant={isResign ? "dialog-danger" : "dialog-primary"}
+            onClick={onConfirm}
+            label={isResign ? "Abandonner" : "Proposer"}
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -802,22 +779,20 @@ function DrawOfferCard({
       </p>
       {incoming && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 12 }}>
-          <button
-            type="button"
+          <Button
+            variant="profile-outline"
             disabled={loading}
             onClick={onDecline}
-            style={{ height: 36, borderRadius: 8, border: "1px solid var(--color-border)", background: "transparent", color: "var(--color-text-muted)", fontSize: 13, fontWeight: 700, cursor: loading ? "wait" : "pointer" }}
-          >
-            Refuser
-          </button>
-          <button
-            type="button"
+            className="h-9 px-3 text-[13px] font-bold disabled:cursor-wait"
+            label="Refuser"
+          />
+          <Button
+            variant="profile-primary"
             disabled={loading}
             onClick={onAccept}
-            style={{ height: 36, borderRadius: 8, border: "1px solid rgba(201,169,110,0.34)", background: "var(--color-gold)", color: "#0d1117", fontSize: 13, fontWeight: 800, cursor: loading ? "wait" : "pointer", opacity: loading ? 0.75 : 1 }}
-          >
-            Accepter
-          </button>
+            className="h-9 px-3 py-0 text-[13px] font-extrabold disabled:cursor-wait disabled:opacity-75"
+            label="Accepter"
+          />
         </div>
       )}
     </div>
@@ -879,7 +854,6 @@ function GameView({ config, gameId }: { config: GameConfig; gameId: string }) {
   const [moves, setMoves] = useState<string[]>([]);
   const [remoteGame, setRemoteGame] = useState<GameResponseDto | null>(null);
   const [dialog, setDialog] = useState<DialogType | null>(null);
-  const [rulesOpen, setRulesOpen] = useState(false);
   const [drawResponseLoading, setDrawResponseLoading] = useState(false);
   const [pendingMoveInfo, setPendingMoveInfo] = useState<PendingMoveInfo | null>(null);
   const reportRequestedRef = useRef(false);
@@ -887,6 +861,7 @@ function GameView({ config, gameId }: { config: GameConfig; gameId: string }) {
   const addToast = useToastStore((state) => state.addToast);
   const authUser = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
+  const openChessRulesSidebar = useOpenChessRulesSidebar();
 
   const { board, selected, legalMoves, turn, inCheck, pendingPromotion } = gameState;
   const isWaitingForOpponent = config.mode === "online" && remoteGame?.status === "waiting";
@@ -1198,22 +1173,13 @@ function GameView({ config, gameId }: { config: GameConfig; gameId: string }) {
 
       {/* Right panel */}
       <div style={{ width: 320, display: "flex", flexDirection: "column", gap: 12, paddingTop: 0, flexShrink: 0, maxHeight: "calc(100vh - 64px - 36px)", overflow: "hidden" }}>
-        <button
+        <Button
+          variant="play-rules"
           type="button"
-          onClick={() => setRulesOpen(true)}
-          style={{ height: 42, borderRadius: 10, border: "1px solid rgba(201,169,110,0.28)", background: "rgba(201,169,110,0.08)", color: "var(--color-gold)", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, fontSize: 13, fontWeight: 800, cursor: "pointer", transition: "background 0.15s, border-color 0.15s" }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(201,169,110,0.13)";
-            e.currentTarget.style.borderColor = "rgba(201,169,110,0.42)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(201,169,110,0.08)";
-            e.currentTarget.style.borderColor = "rgba(201,169,110,0.28)";
-          }}
-        >
-          <BookOpen size={16} />
-          Voir les règles
-        </button>
+          onClick={openChessRulesSidebar}
+          icon={<BookOpen size={16} />}
+          label="Voir les règles"
+        />
 
         {/* Game info */}
         <div style={{ background: "var(--color-bg-2)", border: "1px solid var(--color-border)", borderRadius: 10, padding: "14px 16px" }}>
@@ -1255,35 +1221,46 @@ function GameView({ config, gameId }: { config: GameConfig; gameId: string }) {
 
         {/* Actions */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <button disabled={actionsDisabled || Boolean(drawOfferedBy)} onClick={() => setDialog("draw")} style={{ padding: "11px", borderRadius: 8, border: "1px solid var(--color-border)", background: "none", color: "var(--color-text-muted)", fontSize: 14, fontWeight: 500, cursor: actionsDisabled || drawOfferedBy ? "not-allowed" : "pointer", opacity: actionsDisabled || drawOfferedBy ? 0.52 : 1, transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            onMouseEnter={(e) => { if (actionsDisabled || drawOfferedBy) return; (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,169,110,0.4)"; (e.currentTarget as HTMLElement).style.color = "var(--color-gold)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)"; (e.currentTarget as HTMLElement).style.color = "var(--color-text-muted)"; }}>
-            <Handshake size={15} /> {ownDrawOfferPending ? "Nulle proposée" : incomingDrawOffer ? "Répondre à la nulle" : "Proposer la nulle"}
-          </button>
-          <button disabled={actionsDisabled} onClick={() => setDialog("resign")} style={{ padding: "11px", borderRadius: 8, border: "1px solid rgba(248,81,73,0.3)", background: "rgba(248,81,73,0.07)", color: "var(--color-danger)", fontSize: 14, fontWeight: 500, cursor: actionsDisabled ? "not-allowed" : "pointer", opacity: actionsDisabled ? 0.52 : 1, transition: "background 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            onMouseEnter={(e) => { if (!actionsDisabled) e.currentTarget.style.background = "rgba(248,81,73,0.15)"; }}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.07)")}>
-            <Flag size={15} /> Abandonner
-          </button>
+          <Button
+            variant="play-neutral"
+            disabled={actionsDisabled || Boolean(drawOfferedBy)}
+            onClick={() => setDialog("draw")}
+            icon={<Handshake size={15} />}
+            label={ownDrawOfferPending ? "Nulle proposée" : incomingDrawOffer ? "Répondre à la nulle" : "Proposer la nulle"}
+          />
+          <Button
+            variant="play-danger"
+            disabled={actionsDisabled}
+            onClick={() => setDialog("resign")}
+            icon={<Flag size={15} />}
+            label="Abandonner"
+          />
         </div>
       </div>
 
       {/* Promotion modal */}
       {pendingPromotion && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: 28, borderRadius: 16, background: "var(--color-bg-3)", border: "1px solid var(--color-border)", boxShadow: "0 16px 48px rgba(0,0,0,0.6)" }}>
-            <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)" }}>Promotion</p>
-            <div style={{ display: "flex", gap: 12 }}>
-              {PROMOTION_PIECES.map((pt) => (
-                <button key={pt} onClick={() => handlePromotion(pt)} style={{ width: 72, height: 72, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 12, border: "1px solid var(--color-border)", background: "var(--color-bg-2)", cursor: "pointer", transition: "border-color 0.15s" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-gold)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}>
-                  <PieceSVG type={pt as PieceType} color={pendingPromotion.color} size={52} />
-                </button>
-              ))}
-            </div>
+        <Dialog
+          title="Promotion"
+          onClose={() => undefined}
+          width={380}
+          zIndex={300}
+          bodyClassName="px-7 pb-7 pt-2"
+          className="bg-[var(--color-bg-3)]"
+        >
+          <div className="flex justify-center gap-3">
+            {PROMOTION_PIECES.map((pt) => (
+              <Button
+                key={pt}
+                onClick={() => handlePromotion(pt)}
+                variant="tile"
+                className="h-[72px] w-[72px] p-0"
+              >
+                <PieceSVG type={pt as PieceType} color={pendingPromotion.color} size={52} />
+              </Button>
+            ))}
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Confirm dialog */}
@@ -1294,7 +1271,6 @@ function GameView({ config, gameId }: { config: GameConfig; gameId: string }) {
           onCancel={() => setDialog(null)}
         />
       )}
-      <ChessRulesSidebar open={rulesOpen} onClose={() => setRulesOpen(false)} />
     </div>
   );
 }

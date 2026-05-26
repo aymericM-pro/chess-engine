@@ -8,6 +8,7 @@ import { useThemeStore } from "@/shared/theme/useThemeStore";
 import { gamesApi } from "@/shared/api/games.api";
 import type { Color, PieceType, Move } from "@/shared/types/chess";
 import type { GameResponseDto, GameMove } from "@/shared/api/types";
+import { Button } from "@/shared/components/Button";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -84,18 +85,6 @@ function Controls({ step, total, moves, onGoTo }: { step: number; total: number;
     onGoTo(Math.round(((e.clientX - rect.left) / rect.width) * total));
   };
 
-  const btnStyle = (disabled: boolean): React.CSSProperties => ({
-    display: "flex", alignItems: "center", justifyContent: "center",
-    width: 36, height: 34, borderRadius: 8,
-    border: "1px solid var(--color-border)",
-    background: "var(--color-bg-2)",
-    color: disabled ? "var(--color-text-muted)" : "var(--color-text-primary)",
-    cursor: disabled ? "default" : "pointer",
-    opacity: disabled ? 0.3 : 1,
-    flexShrink: 0,
-    transition: "background 0.15s",
-  });
-
   let status: React.ReactNode = "Position initiale";
   if (step > 0 && step <= total) {
     const m = moves[step - 1];
@@ -106,13 +95,13 @@ function Controls({ step, total, moves, onGoTo }: { step: number; total: number;
   return (
     <div style={{ marginTop: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <button style={btnStyle(step === 0)} disabled={step === 0} onClick={() => onGoTo(0)}><ChevronsLeft size={15} /></button>
-        <button style={btnStyle(step === 0)} disabled={step === 0} onClick={() => onGoTo(step - 1)}><ChevronLeft size={15} /></button>
+        <Button variant="profile-outline" className="h-[34px] w-9 p-0 disabled:cursor-default disabled:opacity-30" disabled={step === 0} onClick={() => onGoTo(0)}><ChevronsLeft size={15} /></Button>
+        <Button variant="profile-outline" className="h-[34px] w-9 p-0 disabled:cursor-default disabled:opacity-30" disabled={step === 0} onClick={() => onGoTo(step - 1)}><ChevronLeft size={15} /></Button>
         <div ref={progressRef} onClick={handleProgressClick} style={{ flex: 1, height: 5, borderRadius: 3, background: "var(--color-bg-3)", border: "1px solid var(--color-border)", overflow: "hidden", cursor: "pointer" }}>
           <div style={{ height: "100%", borderRadius: 3, minWidth: 2, transition: "width 0.18s", width: `${total === 0 ? 0 : (step / total) * 100}%`, background: "linear-gradient(90deg, var(--color-accent, #58a6ff), #79c0ff)" }} />
         </div>
-        <button style={btnStyle(step === total)} disabled={step === total} onClick={() => onGoTo(step + 1)}><ChevronRight size={15} /></button>
-        <button style={btnStyle(step === total)} disabled={step === total} onClick={() => onGoTo(total)}><ChevronsRight size={15} /></button>
+        <Button variant="profile-outline" className="h-[34px] w-9 p-0 disabled:cursor-default disabled:opacity-30" disabled={step === total} onClick={() => onGoTo(step + 1)}><ChevronRight size={15} /></Button>
+        <Button variant="profile-outline" className="h-[34px] w-9 p-0 disabled:cursor-default disabled:opacity-30" disabled={step === total} onClick={() => onGoTo(total)}><ChevronsRight size={15} /></Button>
       </div>
       <div style={{ fontFamily: "Georgia, serif", fontStyle: "italic", fontSize: 13, color: "var(--color-text-muted)", marginTop: 6, paddingLeft: 4 }}>
         {step > 0 && <span style={{ color: "var(--color-text-muted)" }}>Coup {step} · </span>}{status}
@@ -280,14 +269,13 @@ export function GameReplayDialog({ game: initialGame, authUserId, onClose }: Pro
             {endLabel && <span style={{ fontSize: 12, color: "var(--color-text-muted)", background: "var(--color-bg-3)", border: "1px solid var(--color-border)", borderRadius: 6, padding: "2px 8px" }}>{endLabel}</span>}
             <span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>{dateStr}</span>
           </div>
-          <button
+          <Button
+            variant="compact-icon"
             onClick={onClose}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", padding: 6, borderRadius: 6, display: "flex", transition: "color 0.15s, background 0.15s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--color-text-primary)"; e.currentTarget.style.background = "var(--color-bg-3)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--color-text-muted)"; e.currentTarget.style.background = "none"; }}
+            className="h-auto w-auto rounded-md p-1.5"
           >
             <X size={18} />
-          </button>
+          </Button>
         </div>
 
         {/* Body */}

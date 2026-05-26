@@ -6,6 +6,7 @@ import type { PlayerResponseDto } from "@/shared/api/types";
 import { getErrorMessage } from "@/shared/api/errorMessage";
 import { useToastStore } from "@/shared/toasts/toastStore";
 import { useAuthStore } from "@/modules/auth/store/authStore";
+import { Button } from "@/shared/components/Button";
 
 interface Player {
   id: string;
@@ -278,41 +279,14 @@ function PlayerCard({
         </span>
       </div>
 
-      <button
-        type="button"
+      <Button
+        variant="players-action"
         disabled={!canRequest || requesting}
         onClick={() => onRequestFriend(player)}
-        style={{
-          marginTop: "auto",
-          minHeight: 38,
-          borderRadius: 9,
-          border: canRequest ? "1px solid rgba(201,169,110,0.28)" : "1px solid rgba(201,169,110,0.20)",
-          background: canRequest ? "rgba(201,169,110,0.08)" : "rgba(201,169,110,0.05)",
-          color: canRequest ? "var(--color-gold)" : "var(--color-text-muted)",
-          cursor: !canRequest || requesting ? "default" : "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          fontSize: 13,
-          fontWeight: 700,
-          opacity: requesting ? 0.7 : 1,
-          transition: "background 0.15s, border-color 0.15s",
-        }}
-        onMouseEnter={(e) => {
-          if (!canRequest || requesting) return;
-          e.currentTarget.style.background = "rgba(201,169,110,0.13)";
-          e.currentTarget.style.borderColor = "rgba(201,169,110,0.42)";
-        }}
-        onMouseLeave={(e) => {
-          if (!canRequest || requesting) return;
-          e.currentTarget.style.background = "rgba(201,169,110,0.08)";
-          e.currentTarget.style.borderColor = "rgba(201,169,110,0.28)";
-        }}
-      >
-        {isLocked ? <Check size={15} /> : <UserRoundPlus size={15} />}
-        {requesting ? "Envoi…" : buttonLabel[actionStatus]}
-      </button>
+        className={requesting ? "opacity-70" : ""}
+        icon={isLocked ? <Check size={15} /> : <UserRoundPlus size={15} />}
+        label={requesting ? "Envoi…" : buttonLabel[actionStatus]}
+      />
     </div>
   );
 }

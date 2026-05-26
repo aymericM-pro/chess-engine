@@ -8,6 +8,9 @@ import type {
   FriendResponseDto,
 } from "@/shared/api/types";
 import { useToastStore } from "@/shared/toasts/toastStore";
+import { Button } from "@/shared/components/Button";
+import { Tab } from "@/shared/components/Tab";
+import { Tabs } from "@/shared/components/Tabs";
 
 type FriendsTab = "incoming" | "outgoing" | "friends";
 
@@ -85,24 +88,22 @@ function RequestRow({
 
       {direction === "incoming" ? (
         <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="profile-outline"
             disabled={accepting || declining}
             onClick={() => onDecline?.(request)}
-            className="flex h-10 cursor-pointer items-center gap-2 rounded-[8px] border border-[var(--color-border)] bg-transparent px-3 text-xs font-black text-[var(--color-text-muted)] transition hover:border-[rgba(248,81,73,0.32)] hover:bg-[rgba(248,81,73,0.08)] hover:text-[var(--color-danger)] disabled:cursor-default disabled:opacity-60"
-          >
-            {declining ? <Loader2 size={15} className="animate-spin" /> : <X size={15} />}
-            Refuser
-          </button>
-          <button
-            type="button"
+            className="h-10 px-3 text-xs font-black hover:border-[rgba(248,81,73,0.32)] hover:bg-[rgba(248,81,73,0.08)] hover:text-[var(--color-danger)] disabled:cursor-default disabled:opacity-60"
+            icon={declining ? <Loader2 size={15} className="animate-spin" /> : <X size={15} />}
+            label="Refuser"
+          />
+          <Button
+            variant="play-rules"
             disabled={accepting || declining}
             onClick={() => onAccept?.(request)}
-            className="flex h-10 cursor-pointer items-center gap-2 rounded-[8px] border border-[rgba(201,169,110,0.34)] bg-[rgba(201,169,110,0.12)] px-4 text-xs font-black text-[var(--color-gold)] transition hover:bg-[rgba(201,169,110,0.18)] disabled:cursor-default disabled:opacity-60"
-          >
-            {accepting ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
-            Accepter
-          </button>
+            className="h-10 w-auto px-4 text-xs font-black disabled:cursor-default disabled:opacity-60"
+            icon={accepting ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+            label="Accepter"
+          />
         </div>
       ) : (
         <div className="flex shrink-0 items-center gap-2 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-3)] px-3 py-2 text-xs font-bold text-[var(--color-text-muted)]">
@@ -239,39 +240,18 @@ export function FriendsPage() {
 
       {!loading && !error && (
         <section className="overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-2)]">
-          <div className="border-b border-[var(--color-border)] bg-[rgba(255,255,255,0.015)] px-4 py-3">
-            <div className="inline-flex max-w-full flex-wrap gap-1 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-3)] p-1">
-            {tabs.map((tab) => {
-              const selected = activeTab === tab.id;
-
-              return (
-                <button
+          <div className="border-b border-[var(--color-border)] px-4 py-3">
+            <Tabs ariaLabel="Navigation des amis">
+              {tabs.map((tab) => (
+                <Tab
                   key={tab.id}
-                  type="button"
+                  active={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={[
-                    "group relative flex min-h-9 cursor-pointer items-center gap-2 rounded-[6px] px-3.5 text-sm font-bold outline-none transition",
-                    "focus-visible:ring-2 focus-visible:ring-[rgba(201,169,110,0.36)] focus-visible:ring-offset-0",
-                    selected
-                      ? "bg-[var(--color-bg-2)] text-[var(--color-text-primary)] shadow-[0_1px_0_rgba(255,255,255,0.04),0_10px_24px_rgba(0,0,0,0.18)]"
-                      : "text-[var(--color-text-muted)] hover:bg-[rgba(255,255,255,0.035)] hover:text-[var(--color-text-primary)]",
-                  ].join(" ")}
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className={[
-                      "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-black transition",
-                      selected
-                        ? "bg-[rgba(201,169,110,0.18)] text-[var(--color-gold)]"
-                        : "bg-[rgba(255,255,255,0.045)] text-[var(--color-text-muted)] group-hover:bg-[rgba(255,255,255,0.07)]",
-                    ].join(" ")}
-                  >
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
-            </div>
+                  label={tab.label}
+                  count={tab.count}
+                />
+              ))}
+            </Tabs>
           </div>
 
           <div className="border-b border-[var(--color-border)] px-5 py-4">

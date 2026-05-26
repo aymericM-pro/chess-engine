@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useReplayStore } from '../store/replayStore'
 import { MOVES, TOTAL_MOVES } from '../data/moves'
+import { Button } from '@/shared/components/Button'
 
 export function MoveList() {
   const { t } = useTranslation()
@@ -43,9 +44,10 @@ export function MoveList() {
               <div className="flex items-center justify-end px-[7px] text-[0.65rem] text-text-muted font-medium border-r border-border font-serif">
                 {i + 1}
               </div>
-              <button
+              <Button
                 ref={wActive ? activeRef : undefined}
-                className={`border-b border-[rgba(255,255,255,0.05)] font-serif text-[0.88rem] font-normal py-[5px] px-[10px] cursor-pointer text-left transition-all duration-100 tracking-[0.02em] ${
+                variant="menu-item"
+                className={`justify-start rounded-none border-b border-[rgba(255,255,255,0.05)] px-[10px] py-[5px] text-left font-serif text-[0.88rem] font-normal tracking-[0.02em] ${
                   wActive
                     ? 'bg-[rgba(88,166,255,0.14)] text-accent font-semibold'
                     : 'text-text-primary hover:bg-[rgba(88,166,255,0.07)] hover:text-accent'
@@ -53,11 +55,12 @@ export function MoveList() {
                 onClick={() => goTo(wStep)}
               >
                 {MOVES[i * 2].s}
-              </button>
+              </Button>
               {bStep <= TOTAL_MOVES ? (
-                <button
+                <Button
                   ref={bActive ? activeRef : undefined}
-                  className={`border-b border-[rgba(255,255,255,0.05)] border-l border-l-[rgba(255,255,255,0.05)] font-serif text-[0.88rem] font-normal py-[5px] px-[10px] cursor-pointer text-left transition-all duration-100 tracking-[0.02em] ${
+                  variant="menu-item"
+                  className={`justify-start rounded-none border-b border-l border-[rgba(255,255,255,0.05)] border-l-[rgba(255,255,255,0.05)] px-[10px] py-[5px] text-left font-serif text-[0.88rem] font-normal tracking-[0.02em] ${
                     bActive
                       ? 'bg-[rgba(88,166,255,0.14)] text-accent font-semibold'
                       : 'text-text-primary hover:bg-[rgba(88,166,255,0.07)] hover:text-accent'
@@ -65,7 +68,7 @@ export function MoveList() {
                   onClick={() => goTo(bStep)}
                 >
                   {MOVES[i * 2 + 1]?.s ?? ''}
-                </button>
+                </Button>
               ) : (
                 <div className="border-l border-l-[rgba(255,255,255,0.03)]" />
               )}

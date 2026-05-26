@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { Crown, Settings, Swords, TrendingUp } from "lucide-react";
 import { PageBackground } from "@/modules/layout/components/PageBackground";
+import { Button } from "@/shared/components/Button";
 
 const FEATURES = [
   { icon: <Swords size={18} strokeWidth={1.8} />, title: "Jouez en ligne", desc: "Affrontez des joueurs du monde entier en temps réel, à toutes les cadences." },
@@ -84,13 +85,11 @@ export function Field({ label, children, error }: { label: string; children: Rea
 
 export function SubmitButton({ label, loading, disabled }: { label: string; loading?: boolean; disabled?: boolean }) {
   return (
-    <button
+    <Button
+      variant="auth-primary"
       type="submit"
       disabled={disabled || loading}
-      style={{ width: "100%", padding: "13px", borderRadius: 8, border: "none", background: "#c9a96e", color: "#0d1117", fontSize: 15, fontWeight: 700, cursor: disabled || loading ? "wait" : "pointer", transition: "opacity 0.15s", opacity: disabled || loading ? 0.7 : 1 }}
-      onMouseEnter={(e) => { if (!disabled && !loading) e.currentTarget.style.opacity = "0.88" }}
-      onMouseLeave={(e) => { if (!disabled && !loading) e.currentTarget.style.opacity = "1" }}>
-      {loading ? "Chargement…" : label}
-    </button>
+      label={loading ? "Chargement…" : label}
+    />
   );
 }

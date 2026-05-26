@@ -6,6 +6,8 @@ import { GameReplayDialog } from "./GameReplayDialog";
 import type { GameResponseDto } from "@/shared/api/types";
 import { getErrorMessage } from "@/shared/api/errorMessage";
 import { useToastStore } from "@/shared/toasts/toastStore";
+import { Button } from "@/shared/components/Button";
+import { Dialog } from "@/shared/components/Dialog";
 
 type ResultFilter = "win" | "loss" | "draw" | "unfinished";
 type ChipTone = { color: string; bg: string; border: string };
@@ -78,31 +80,16 @@ function ActionBtn({ icon, tooltip, onClick, loading }: { icon: React.ReactNode;
   const [hover, setHover] = useState(false);
   return (
     <div style={{ position: "relative", display: "inline-flex" }}>
-      <button
+      <Button
+        variant="compact-icon"
         onClick={onClick}
         disabled={loading}
-        style={{
-          background: "none", border: "1px solid transparent", borderRadius: 6,
-          padding: "5px 7px", cursor: loading ? "default" : "pointer",
-          color: "var(--color-text-muted)", display: "flex", alignItems: "center",
-          opacity: loading ? 0.5 : 1,
-          transition: "color 0.15s, border-color 0.15s, background 0.15s",
-        }}
-        onMouseEnter={(e) => {
-          setHover(true);
-          e.currentTarget.style.color = "var(--color-gold)";
-          e.currentTarget.style.borderColor = "rgba(201,169,110,0.35)";
-          e.currentTarget.style.background = "rgba(201,169,110,0.08)";
-        }}
-        onMouseLeave={(e) => {
-          setHover(false);
-          e.currentTarget.style.color = "var(--color-text-muted)";
-          e.currentTarget.style.borderColor = "transparent";
-          e.currentTarget.style.background = "none";
-        }}
+        className="h-auto w-auto rounded-md border border-transparent px-[7px] py-[5px] hover:border-[rgba(201,169,110,0.35)] hover:bg-[rgba(201,169,110,0.08)] hover:text-[var(--color-gold)] disabled:cursor-default disabled:opacity-50"
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
       >
         {icon}
-      </button>
+      </Button>
       {hover && (
         <div style={{
           position: "absolute", bottom: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)",
@@ -150,8 +137,8 @@ function FilterMenuButton({
   const highlighted = active || open || hovered;
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="choice-row"
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
@@ -160,28 +147,7 @@ function FilterMenuButton({
       }}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        minHeight: 40,
-        background: highlighted ? "rgba(201,169,110,0.10)" : "rgba(18,21,28,0.70)",
-        border: `1px solid ${highlighted ? "rgba(201,169,110,0.42)" : "var(--color-border)"}`,
-        borderRadius: 8,
-        padding: "8px 14px",
-        fontSize: 14,
-        fontWeight: 600,
-        color: highlighted ? "var(--color-gold)" : "var(--color-text-primary)",
-        cursor: "pointer",
-        boxShadow: open
-          ? "0 0 0 3px rgba(201,169,110,0.10), 0 12px 28px rgba(0,0,0,0.22)"
-          : hovered
-            ? "0 8px 20px rgba(0,0,0,0.18)"
-            : "none",
-        transform: pressed ? "translateY(1px) scale(0.985)" : hovered ? "translateY(-1px)" : "none",
-        transition: "background 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, transform 0.12s ease",
-        outline: "none",
-      }}
+      className={`min-h-10 w-auto bg-[rgba(18,21,28,0.70)] px-3.5 py-2 font-semibold ${highlighted ? "border-[rgba(201,169,110,0.42)] bg-[rgba(201,169,110,0.10)] text-[var(--color-gold)]" : ""} ${open ? "shadow-[0_0_0_3px_rgba(201,169,110,0.10),0_12px_28px_rgba(0,0,0,0.22)]" : hovered ? "shadow-[0_8px_20px_rgba(0,0,0,0.18)]" : ""} ${pressed ? "translate-y-px scale-[0.985]" : hovered ? "-translate-y-px" : ""}`}
     >
       <span>{label}</span>
       <ChevronDown
@@ -192,7 +158,7 @@ function FilterMenuButton({
           transition: "transform 0.18s ease, opacity 0.16s ease",
         }}
       />
-    </button>
+    </Button>
   );
 }
 
@@ -214,8 +180,8 @@ function FilterOptionButton({
   const highlighted = active || hovered;
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="profile-option"
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
@@ -224,21 +190,7 @@ function FilterOptionButton({
       }}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 11,
-        width: "100%",
-        minHeight: 42,
-        textAlign: "left",
-        background: active ? tone.bg : hovered ? "rgba(255,255,255,0.045)" : "transparent",
-        border: `1px solid ${active ? tone.border : hovered ? "rgba(255,255,255,0.07)" : "transparent"}`,
-        borderRadius: 7,
-        padding: "9px 10px",
-        cursor: "pointer",
-        transform: pressed ? "scale(0.99)" : "none",
-        transition: "background 0.14s ease, border-color 0.14s ease, transform 0.1s ease",
-      }}
+      className={`min-h-[42px] gap-[11px] rounded-[7px] border px-2.5 py-[9px] ${active ? "bg-[rgba(201,169,110,0.12)]" : hovered ? "border-[rgba(255,255,255,0.07)] bg-white/[0.045]" : "border-transparent"} ${pressed ? "scale-[0.99]" : ""}`}
     >
       <span
         style={{
@@ -268,7 +220,7 @@ function FilterOptionButton({
       >
         {label}
       </span>
-    </button>
+    </Button>
   );
 }
 
@@ -284,97 +236,64 @@ function ActiveFilterChip({
   onRemove: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="play-rules"
       onClick={onOpen}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 8,
-        minHeight: 28,
-        padding: "4px 6px 4px 11px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 600,
-        lineHeight: 1,
-        color: tone.color,
-        background: tone.bg,
-        border: `1px solid ${tone.border}`,
-        cursor: "pointer",
-        userSelect: "none",
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.08)")}
-      onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
+      className="min-h-7 w-auto gap-2 rounded-full px-1.5 py-1 pl-[11px] text-xs font-semibold leading-none hover:brightness-110"
+      style={{ color: tone.color, background: tone.bg, borderColor: tone.border }}
     >
       <span style={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
-      <button
-        type="button"
+      <span
+        role="button"
+        tabIndex={0}
         onClick={(e) => {
           e.stopPropagation();
           onRemove();
         }}
         aria-label={`Retirer ${label}`}
         title={`Retirer ${label}`}
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: "50%",
-          border: `1px solid ${tone.border}`,
-          background: "rgba(0,0,0,0.16)",
-          color: tone.color,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          padding: 0,
-          flexShrink: 0,
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            onRemove();
+          }
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.28)")}
-        onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.16)")}
+        className="inline-flex h-5 w-5 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border bg-black/15 hover:bg-black/25"
+        style={{ color: tone.color, borderColor: tone.border }}
       >
         <X size={12} strokeWidth={2.5} />
-      </button>
-    </button>
+      </span>
+    </Button>
   );
 }
 
 
 function DeleteDialog({ count, onConfirm, onCancel }: { count: number; onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div
-      style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}
-      onClick={onCancel}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ background: "var(--color-bg-2)", border: "1px solid var(--color-border)", borderRadius: 14, padding: "32px 36px", width: 380, boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}
-      >
-        <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>
-          Supprimer {count === 1 ? "cette partie" : `ces ${count} parties`} ?
-        </div>
-        <p style={{ fontSize: 14, color: "var(--color-text-muted)", marginBottom: 28, lineHeight: 1.6 }}>
-          {count === 1 ? "Cette partie sera retirée de votre vue." : `Ces ${count} parties seront retirées de votre vue.`}
-        </p>
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button
+    <Dialog
+      title={`Supprimer ${count === 1 ? "cette partie" : `ces ${count} parties`} ?`}
+      description={count === 1 ? "Cette partie sera retirée de votre vue." : `Ces ${count} parties seront retirées de votre vue.`}
+      onClose={onCancel}
+      width={380}
+      footerClassName="flex gap-2.5 px-7 pb-7"
+      footer={
+        <>
+          <Button
+            variant="profile-outline"
             onClick={onCancel}
-            style={{ background: "none", border: "1px solid var(--color-border)", borderRadius: 6, padding: "8px 20px", fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)", cursor: "pointer" }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-faint)")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
-          >
-            Annuler
-          </button>
-          <button
+            className="flex-1 justify-center rounded-md px-5 py-2 text-[var(--color-text-primary)]"
+            label="Annuler"
+          />
+          <Button
+            variant="dialog-danger"
             onClick={onConfirm}
-            style={{ background: "var(--color-danger)", border: "1px solid var(--color-danger)", borderRadius: 6, padding: "8px 20px", fontSize: 14, fontWeight: 600, color: "#fff", cursor: "pointer" }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-          >
-            Supprimer
-          </button>
-        </div>
-      </div>
-    </div>
+            className="flex-1 rounded-md px-5 py-2"
+            label="Supprimer"
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -537,15 +456,13 @@ export function HistoryPage() {
             </p>
           </div>
           {selected.size > 0 && (
-            <button
+            <Button
+              variant="small-danger"
               onClick={() => setShowDialog(true)}
-              style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(248,81,73,0.1)", border: "1px solid rgba(248,81,73,0.35)", borderRadius: 8, padding: "9px 18px", fontSize: 14, fontWeight: 600, color: "var(--color-danger)", cursor: "pointer" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.18)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(248,81,73,0.1)")}
-            >
-              <Trash2 size={15} />
-              Supprimer ({selected.size})
-            </button>
+              className="bg-[rgba(248,81,73,0.1)]"
+              icon={<Trash2 size={15} />}
+              label={`Supprimer (${selected.size})`}
+            />
           )}
         </div>
 
@@ -577,14 +494,12 @@ export function HistoryPage() {
                 />
 
                 {activeFilterCount > 0 && (
-                  <button
+                  <Button
+                    variant="profile-outline"
                     onClick={clearFilters}
-                    style={{ background: "none", border: "1px solid var(--color-border)", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "var(--color-text-muted)", cursor: "pointer" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
-                  >
-                    Effacer
-                  </button>
+                    className="px-3 py-2 text-[13px] hover:text-[var(--color-text-primary)]"
+                    label="Effacer"
+                  />
                 )}
 
                 {openFilter === "timeControl" && (

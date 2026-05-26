@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { ArrowLeft, Eye, EyeOff, KeyRound } from "lucide-react";
 import { AuthLayout, Field, SubmitButton, inputStyle } from "./AuthLayout";
+import { Button } from "@/shared/components/Button";
 import { authApi } from "@/shared/api/auth.api";
 import { getErrorMessage } from "@/shared/api/errorMessage";
 import { useToastStore } from "@/shared/toasts/toastStore";
-import { getFieldErrors, resetPasswordSchema, type FieldErrors } from "@/shared/validation/formSchemas";
-
-type ResetPasswordField = "token" | "password" | "confirm";
+import { resetPasswordSchema } from "@/shared/validation/formSchemas";
+import { useZodForm } from "@/shared/validation/useZodForm";
 
 function PasswordField({
   label,
@@ -34,15 +34,13 @@ function PasswordField({
           onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(201,169,110,0.5)")}
           onBlur={(e) => (e.currentTarget.style.borderColor = error ? "var(--color-danger)" : "#2a2a34")}
         />
-        <button
+        <Button
+          variant="auth-input-icon"
           type="button"
           onClick={() => setVisible((v) => !v)}
-          style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", display: "flex", padding: 4 }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
         >
           {visible ? <EyeOff size={15} /> : <Eye size={15} />}
-        </button>
+        </Button>
       </div>
     </Field>
   );
@@ -55,23 +53,19 @@ export function ResetPasswordPage() {
   const token = params.get("token") ?? "";
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [errors, setErrors] = useState<FieldErrors<ResetPasswordField>>({});
   const [loading, setLoading] = useState(false);
+  const { errors, clearFieldError, validate } = useZodForm<typeof resetPasswordSchema>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = resetPasswordSchema.safeParse({ token, password, confirm });
-    if (!parsed.success) {
-      setErrors(getFieldErrors<ResetPasswordField>(parsed.error));
-      return;
-    }
+    const parsed = validate(resetPasswordSchema, { token, password, confirm });
+    if (!parsed) return;
 
-    setErrors({});
     setLoading(true);
     try {
       await authApi.resetPassword({
-        token: parsed.data.token,
-        password: parsed.data.password,
+        token: parsed.token,
+        password: parsed.password,
       });
       addToast({
         type: "success",
@@ -115,7 +109,7 @@ export function ResetPasswordPage() {
           error={errors.password}
           onChange={(value) => {
             setPassword(value);
-            setErrors((current) => ({ ...current, password: undefined, confirm: undefined }));
+            clearFieldError("password", ["confirm"]);
           }}
         />
         <PasswordField
@@ -124,7 +118,7 @@ export function ResetPasswordPage() {
           error={errors.confirm}
           onChange={(value) => {
             setConfirm(value);
-            setErrors((current) => ({ ...current, confirm: undefined }));
+            clearFieldError("confirm");
           }}
         />
 
@@ -134,15 +128,12 @@ export function ResetPasswordPage() {
       </form>
 
       <p style={{ fontSize: 13, color: "var(--color-text-muted)", textAlign: "center", marginTop: 24 }}>
-        <Link
+        <Button
           to="/login"
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#c9a96e", textDecoration: "none", fontWeight: 500 }}
-          onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
-        >
-          <ArrowLeft size={14} />
-          Retour à la connexion
-        </Link>
+          variant="auth-link"
+          icon={<ArrowLeft size={14} />}
+          label="Retour à la connexion"
+        />
       </p>
     </AuthLayout>
   );

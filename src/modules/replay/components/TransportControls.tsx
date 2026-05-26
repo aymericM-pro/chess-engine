@@ -3,6 +3,7 @@ import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-r
 import { useTranslation } from 'react-i18next'
 import { useReplayStore } from '../store/replayStore'
 import { MOVES, TOTAL_MOVES } from '../data/moves'
+import { Button } from '@/shared/components/Button'
 
 interface Props {
   width: number
@@ -20,9 +21,6 @@ export function TransportControls({ width }: Props) {
     const n = Math.round(((e.clientX - rect.left) / rect.width) * TOTAL_MOVES)
     goTo(n)
   }
-
-  const btnClass =
-    'flex items-center justify-center w-10 h-[38px] rounded-lg border bg-bg-2 border-border text-text-primary cursor-pointer flex-shrink-0 transition-all duration-150 hover:bg-bg-3 hover:border-accent active:scale-91 disabled:opacity-25 disabled:cursor-default'
 
   let statusContent: React.ReactNode
   if (step === 0) {
@@ -54,12 +52,12 @@ export function TransportControls({ width }: Props) {
   return (
     <div style={{ width }}>
       <div className="flex items-center gap-[6px] mt-[10px]">
-        <button className={btnClass} onClick={first} disabled={step === 0} aria-label="First">
+        <Button variant="profile-outline" className="h-[38px] w-10 p-0 active:scale-91 disabled:cursor-default disabled:opacity-25" onClick={first} disabled={step === 0} aria-label="First">
           <ChevronsLeft size={16} />
-        </button>
-        <button className={btnClass} onClick={prev} disabled={step === 0} aria-label="Previous">
+        </Button>
+        <Button variant="profile-outline" className="h-[38px] w-10 p-0 active:scale-91 disabled:cursor-default disabled:opacity-25" onClick={prev} disabled={step === 0} aria-label="Previous">
           <ChevronLeft size={16} />
-        </button>
+        </Button>
         <div
           ref={progressRef}
           className="flex-1 h-[5px] rounded-[3px] bg-bg-3 border border-border overflow-hidden cursor-pointer"
@@ -73,12 +71,12 @@ export function TransportControls({ width }: Props) {
             }}
           />
         </div>
-        <button className={btnClass} onClick={next} disabled={step === TOTAL_MOVES} aria-label="Next">
+        <Button variant="profile-outline" className="h-[38px] w-10 p-0 active:scale-91 disabled:cursor-default disabled:opacity-25" onClick={next} disabled={step === TOTAL_MOVES} aria-label="Next">
           <ChevronRight size={16} />
-        </button>
-        <button className={btnClass} onClick={last} disabled={step === TOTAL_MOVES} aria-label="Last">
+        </Button>
+        <Button variant="profile-outline" className="h-[38px] w-10 p-0 active:scale-91 disabled:cursor-default disabled:opacity-25" onClick={last} disabled={step === TOTAL_MOVES} aria-label="Last">
           <ChevronsRight size={16} />
-        </button>
+        </Button>
       </div>
       <div
         className="font-serif italic text-[0.88rem] text-text-muted mt-[7px] pl-5 h-5"

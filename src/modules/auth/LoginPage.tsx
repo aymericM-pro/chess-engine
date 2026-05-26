@@ -1,20 +1,20 @@
-import { Link, useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { AuthLayout, Field, SubmitButton, inputStyle } from "./AuthLayout";
+import { Button } from "@/shared/components/Button";
 import { useAuthStore } from "./store/authStore";
 import { ApiError } from "@/shared/api/client";
 import { useToastStore } from "@/shared/toasts/toastStore";
-import { getFieldErrors, loginSchema, type FieldErrors } from "@/shared/validation/formSchemas";
-
-type LoginField = "email" | "password";
+import { loginSchema } from "@/shared/validation/formSchemas";
+import { useZodForm } from "@/shared/validation/useZodForm";
 
 export function LoginPage() {
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<FieldErrors<LoginField>>({});
   const [loading, setLoading] = useState(false);
+  const { errors, clearFieldError, validate } = useZodForm<typeof loginSchema>();
 
   const login = useAuthStore((s) => s.login);
   const addToast = useToastStore((s) => s.addToast);
@@ -24,16 +24,12 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = loginSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      setErrors(getFieldErrors<LoginField>(parsed.error));
-      return;
-    }
+    const parsed = validate(loginSchema, { email, password });
+    if (!parsed) return;
 
-    setErrors({});
     setLoading(true);
     try {
-      await login(parsed.data);
+      await login(parsed);
       navigate(redirectTo, { replace: true });
     } catch (err) {
       const message = getLoginErrorMessage(err);
@@ -62,7 +58,7 @@ export function LoginPage() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setErrors((current) => ({ ...current, email: undefined }));
+              clearFieldError("email");
             }}
             required
             style={{ ...inputStyle, borderColor: errors.email ? "var(--color-danger)" : "#2a2a34" }}
@@ -79,33 +75,29 @@ export function LoginPage() {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setErrors((current) => ({ ...current, password: undefined }));
+                clearFieldError("password");
               }}
               required
               style={{ ...inputStyle, paddingRight: 44, borderColor: errors.password ? "var(--color-danger)" : "#2a2a34" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(201,169,110,0.5)")}
               onBlur={(e) => (e.currentTarget.style.borderColor = errors.password ? "var(--color-danger)" : "var(--color-border)")}
             />
-            <button
+            <Button
+              variant="auth-input-icon"
               type="button"
               onClick={() => setVisible((v) => !v)}
-              style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-muted)", display: "flex", padding: 4, transition: "color 0.15s" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
             >
               {visible ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
+            </Button>
           </div>
         </Field>
         <div style={{ textAlign: "right", marginTop: -12 }}>
-          <Link
+          <Button
             to="/forgot-password"
-            style={{ fontSize: 12, color: "#c9a96e", textDecoration: "none" }}
-            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
-          >
-            Mot de passe oublié ?
-          </Link>
+            variant="auth-link"
+            className="text-xs"
+            label="Mot de passe oublié ?"
+          />
         </div>
 
         <div style={{ marginTop: 4 }}>
@@ -115,14 +107,11 @@ export function LoginPage() {
 
       <p style={{ fontSize: 13, color: "var(--color-text-muted)", textAlign: "center", marginTop: 28 }}>
         Pas encore de compte ?{" "}
-        <Link
+        <Button
           to="/register"
-          style={{ color: "#c9a96e", textDecoration: "none", fontWeight: 500 }}
-          onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
-        >
-          S&apos;inscrire
-        </Link>
+          variant="auth-link"
+          label="S'inscrire"
+        />
       </p>
     </AuthLayout>
   );

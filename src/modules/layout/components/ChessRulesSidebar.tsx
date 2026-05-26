@@ -1,10 +1,6 @@
-import { BookOpen, Crown, Flag, Shield, Swords, X } from "lucide-react";
+import { BookOpen, Crown, Flag, Shield, Swords } from "lucide-react";
 import { IconTile } from "@/shared/components/IconTile";
-
-interface Props {
-  open: boolean;
-  onClose: () => void;
-}
+import { useSidebar } from "@/shared/components/Sidebar";
 
 const sections = [
   {
@@ -47,79 +43,48 @@ const sections = [
   },
 ];
 
-export function ChessRulesSidebar({ open, onClose }: Props) {
+export function ChessRulesSidebar() {
   return (
-    <>
-      <div
-        className={`fixed inset-0 z-[150] transition-opacity duration-300 ${open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
-        style={{ background: "rgba(0,0,0,0.4)" }}
-        onClick={onClose}
-      />
-
-      <aside
-        className={`fixed bottom-0 right-0 top-0 z-[200] flex w-[min(520px,100vw)] flex-col transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "translate-x-full"}`}
-        style={{ background: "var(--color-bg-2)", borderLeft: "1px solid var(--color-border)" }}
-      >
-        <header
-          className="flex flex-shrink-0 items-center justify-between px-7 py-5"
-          style={{ borderBottom: "1px solid var(--color-border)" }}
+    <div className="space-y-4">
+      {sections.map((section) => (
+        <section
+          key={section.title}
+          className="border border-[var(--color-border)] bg-[rgba(255,255,255,0.018)] p-4"
         >
-          <div className="flex items-center gap-3">
-            <IconTile icon={BookOpen} tone="gold" size="sm" />
-            <div>
-              <span className="font-display block text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-text-primary">
-                Règles des échecs
-              </span>
-              <span className="mt-1 block text-xs font-semibold text-[var(--color-text-muted)]">
-                Les bases pour jouer une partie complète.
-              </span>
-            </div>
+          <div className="mb-3 flex items-center gap-3">
+            <IconTile icon={section.icon} tone="gold" size="sm" />
+            <h2 className="font-display text-[0.72rem] font-bold uppercase tracking-[0.08em] text-[var(--color-text-primary)]">
+              {section.title}
+            </h2>
           </div>
-
-          <button
-            onClick={onClose}
-            className="-mr-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#7d8490] transition-[background,color] duration-150 hover:bg-black/[0.18] hover:text-[#c6ccd5]"
-            aria-label="Fermer les règles"
-          >
-            <X size={18} />
-          </button>
-        </header>
-
-        <div className="flex-1 overflow-y-auto px-7 py-6">
-          <div className="space-y-4">
-            {sections.map((section) => (
-              <section
-                key={section.title}
-                className="border border-[var(--color-border)] bg-[rgba(255,255,255,0.018)] p-4"
-              >
-                <div className="mb-3 flex items-center gap-3">
-                  <IconTile icon={section.icon} tone="gold" size="sm" />
-                  <h2 className="font-display text-[0.72rem] font-bold uppercase tracking-[0.08em] text-[var(--color-text-primary)]">
-                    {section.title}
-                  </h2>
-                </div>
-                <ul className="space-y-2">
-                  {section.lines.map((line) => (
-                    <li key={line} className="flex gap-2 text-sm font-semibold leading-6 text-[var(--color-text-muted)]">
-                      <span className="mt-[9px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--color-gold)]" />
-                      <span>{line}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+          <ul className="space-y-2">
+            {section.lines.map((line) => (
+              <li key={line} className="flex gap-2 text-sm font-semibold leading-6 text-[var(--color-text-muted)]">
+                <span className="mt-[9px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--color-gold)]" />
+                <span>{line}</span>
+              </li>
             ))}
-          </div>
-        </div>
-
-        <footer
-          className="flex-shrink-0 px-7 py-4"
-          style={{ borderTop: "1px solid var(--color-border)" }}
-        >
-          <span className="font-display text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-text-muted">
-            Aide de jeu
-          </span>
-        </footer>
-      </aside>
-    </>
+          </ul>
+        </section>
+      ))}
+    </div>
   );
+}
+
+export function useOpenChessRulesSidebar() {
+  const { openSidebar } = useSidebar();
+
+  return () => openSidebar(ChessRulesSidebar, {}, {
+    title: "Règles des échecs",
+    description: "Les bases pour jouer une partie complète.",
+    icon: <IconTile icon={BookOpen} tone="gold" size="sm" />,
+    closeLabel: "Fermer les règles",
+    width: 520,
+    bodyClassName: "px-7 py-6",
+    footer: (
+      <span className="font-display text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-text-muted">
+        Aide de jeu
+      </span>
+    ),
+  });
 }

@@ -8,9 +8,12 @@ import { usePlayerStore } from "@/modules/players/store/playerStore";
 import type { PatchPlayerBody, PatchUserBody } from "@/shared/api/types";
 import { getErrorMessage } from "@/shared/api/errorMessage";
 import { useToastStore } from "@/shared/toasts/toastStore";
-import { getFieldErrors, profileSchema, type FieldErrors } from "@/shared/validation/formSchemas";
+import { profileSchema } from "@/shared/validation/formSchemas";
+import { useZodForm } from "@/shared/validation/useZodForm";
 import { IconTile } from "@/shared/components/IconTile";
 import { ProfileAvatar } from "@/shared/components/ProfileAvatar";
+import { Button } from "@/shared/components/Button";
+import { useSidebar, type SidebarContentProps } from "@/shared/components/Sidebar";
 
 const COUNTRIES = [
   { code: "FR", label: "France", flag: "🇫🇷" },
@@ -28,12 +31,18 @@ interface UserProfile {
   email: string;
   bio: string;
   countryCode: string;
-  color: string;
+  color: "Blancs" | "Noirs" | "Les deux";
   elo: number;
   joinedYear: number;
 }
 
-type ProfileField = keyof UserProfile;
+type ProfileColor = UserProfile["color"];
+
+const PROFILE_COLORS: ProfileColor[] = ["Blancs", "Noirs", "Les deux"];
+
+function toProfileColor(value: string | null | undefined): ProfileColor {
+  return PROFILE_COLORS.includes(value as ProfileColor) ? (value as ProfileColor) : "Les deux";
+}
 
 const EMPTY_USER: UserProfile = {
   username: "",
@@ -110,15 +119,16 @@ function CountrySelect({ value, onChange }: { value: string; onChange: (v: strin
 
   return (
     <div style={{ position: "relative" }} data-country-select="">
-      <button
+      <Button
+        variant="profile-select"
         type="button"
         onClick={() => setOpen((o) => !o)}
-        style={{ ...inputStyle, display: "flex", alignItems: "center", gap: 10, cursor: "pointer", border: `1px solid ${open ? "rgba(201,169,110,0.5)" : "var(--color-border)"}` }}
+        className={open ? "border-[rgba(201,169,110,0.5)]" : ""}
       >
         <span style={{ fontSize: 20 }}>{selected.flag}</span>
         <span style={{ flex: 1, textAlign: "left" }}>{selected.label}</span>
         <ChevronDown size={14} style={{ color: "var(--color-text-muted)", transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
-      </button>
+      </Button>
       {open && (
         <div style={{
           position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 400,
@@ -128,23 +138,17 @@ function CountrySelect({ value, onChange }: { value: string; onChange: (v: strin
           {COUNTRIES.map((c) => {
             const active = c.code === value;
             return (
-              <button
+              <Button
                 key={c.code}
+                variant="profile-option"
                 type="button"
                 onClick={() => { onChange(c.code); setOpen(false); }}
-                style={{
-                  width: "100%", display: "flex", alignItems: "center", gap: 12,
-                  padding: "11px 14px", border: "none", background: active ? "rgba(201,169,110,0.08)" : "none",
-                  color: active ? "var(--color-gold)" : "var(--color-text-primary)",
-                  fontSize: 14, cursor: "pointer", textAlign: "left", transition: "background 0.1s",
-                }}
-                onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--color-bg-3)"; }}
-                onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "none"; }}
+                className={active ? "bg-[rgba(201,169,110,0.08)] text-[var(--color-gold)] hover:bg-[rgba(201,169,110,0.08)]" : ""}
               >
                 <span style={{ fontSize: 20 }}>{c.flag}</span>
                 <span style={{ flex: 1 }}>{c.label}</span>
                 {active && <Check size={14} color="var(--color-gold)" />}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -153,17 +157,22 @@ function CountrySelect({ value, onChange }: { value: string; onChange: (v: strin
   );
 }
 
-function EditSidebar({ user, playerId, onSave, onClose }: { user: UserProfile; playerId?: string; onSave: (u: UserProfile) => boolean | Promise<boolean>; onClose: () => void }) {
+function EditSidebar({
+  user,
+  playerId,
+  onSave,
+  closeSidebar,
+}: {
+  user: UserProfile;
+  playerId?: string;
+  onSave: (u: UserProfile) => boolean | Promise<boolean>;
+} & SidebarContentProps) {
   const [draft, setDraft] = useState<UserProfile>(user);
-  const [visible, setVisible] = useState(false);
   const [loadingPlayer, setLoadingPlayer] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<FieldErrors<ProfileField>>({});
+  const { errors, clearFieldError, validate } = useZodForm<typeof profileSchema>();
   const addToast = useToastStore((state) => state.addToast);
-
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
+  const { setFooter } = useSidebar();
 
   useEffect(() => {
     if (!playerId) return;
@@ -180,69 +189,42 @@ function EditSidebar({ user, playerId, onSave, onClose }: { user: UserProfile; p
       .finally(() => setLoadingPlayer(false));
   }, [addToast, playerId]);
 
-  const close = () => {
-    setVisible(false);
-    setTimeout(onClose, 300);
-  };
-
-  const set = (k: keyof UserProfile, v: string) => {
+  const set = <K extends keyof UserProfile>(k: K, v: UserProfile[K]) => {
     setDraft((p) => ({ ...p, [k]: v }));
-    setErrors((current) => ({ ...current, [k]: undefined }));
+    clearFieldError(k);
   };
   const handleSaveClick = async () => {
-    const parsed = profileSchema.safeParse(draft);
-    if (!parsed.success) {
-      setErrors(getFieldErrors<ProfileField>(parsed.error));
-      return;
-    }
+    const parsed = validate(profileSchema, draft);
+    if (!parsed) return;
 
-    setErrors({});
     setSaving(true);
-    const saved = await onSave(parsed.data);
+    const saved = await onSave(parsed);
     setSaving(false);
-    if (saved) close();
+    if (saved) closeSidebar();
   };
+
+  useEffect(() => {
+    setFooter(
+      <>
+        <Button
+          variant="profile-outline"
+          onClick={closeSidebar}
+          className="flex-1 justify-center px-4 py-3"
+          label="Annuler"
+        />
+        <Button
+          variant="profile-primary"
+          onClick={handleSaveClick}
+          disabled={loadingPlayer || saving}
+          className="flex-[2]"
+          label={loadingPlayer ? "Chargement…" : saving ? "Enregistrement…" : "Enregistrer"}
+        />
+      </>,
+    );
+  }, [closeSidebar, loadingPlayer, saving, setFooter]);
 
   return (
     <>
-      {/* Overlay */}
-      <div
-        onClick={close}
-        style={{
-          position: "fixed", inset: 0, zIndex: 200,
-          background: "rgba(0,0,0,0.5)",
-          opacity: visible ? 1 : 0,
-          transition: "opacity 0.3s ease",
-        }}
-      />
-
-      {/* Drawer */}
-      <div style={{
-        position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 300,
-        width: 480, background: "var(--color-bg-2)",
-        borderLeft: "1px solid var(--color-border)",
-        boxShadow: "-12px 0 40px rgba(0,0,0,0.15)",
-        display: "flex", flexDirection: "column",
-        transform: visible ? "translateX(0)" : "translateX(100%)",
-        transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-      }}>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 28px", borderBottom: "1px solid var(--color-border)" }}>
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 700 }}>Modifier le profil</div>
-            <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 3 }}>Les modifications sont sauvegardées sur votre compte.</div>
-          </div>
-          <button
-            onClick={close}
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#7d8490] transition-[background,color] duration-150 hover:bg-black/[0.18] hover:text-[#c6ccd5]"
-          >
-            <CircleX size={18} />
-          </button>
-        </div>
-
-        {/* Fields */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "28px", display: "flex", flexDirection: "column", gap: 20 }}>
-
           {/* Avatar */}
           <div style={{ display: "flex", justifyContent: "center", paddingBottom: 8 }}>
             <ProfileAvatar initials={(draft.firstName[0] ?? "") + (draft.lastName[0] ?? "")} />
@@ -286,35 +268,17 @@ function EditSidebar({ user, playerId, onSave, onClose }: { user: UserProfile; p
 
           <Field label="Couleur préférée" error={errors.color}>
             <div style={{ display: "flex", gap: 10 }}>
-              {["Blancs", "Noirs", "Les deux"].map((c) => (
-                <button key={c} type="button" onClick={() => set("color", c)} style={{
-                  flex: 1, padding: "10px 0", borderRadius: 8,
-                  border: `1px solid ${draft.color === c ? "rgba(201,169,110,0.4)" : "var(--color-border)"}`,
-                  background: draft.color === c ? "rgba(201,169,110,0.08)" : "var(--color-bg-1)",
-                  color: draft.color === c ? "var(--color-gold)" : "var(--color-text-muted)",
-                  fontSize: 13, fontWeight: draft.color === c ? 600 : 400, cursor: "pointer", transition: "all 0.15s",
-                }}>
-                  {c}
-                </button>
+              {PROFILE_COLORS.map((c) => (
+                <Button
+                  key={c}
+                  variant="profile-segment"
+                  onClick={() => set("color", c)}
+                  className={draft.color === c ? "border-[rgba(201,169,110,0.4)] bg-[rgba(201,169,110,0.08)] font-semibold text-[var(--color-gold)]" : ""}
+                  label={c}
+                />
               ))}
             </div>
           </Field>
-        </div>
-
-        {/* Footer */}
-        <div style={{ padding: "18px 28px", borderTop: "1px solid var(--color-border)", display: "flex", gap: 12 }}>
-          <button onClick={close} style={{ flex: 1, padding: "12px", borderRadius: 8, background: "none", border: "1px solid var(--color-border)", color: "var(--color-text-muted)", fontSize: 14, cursor: "pointer", transition: "border-color 0.15s" }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-faint)")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}>
-            Annuler
-          </button>
-          <button onClick={handleSaveClick} disabled={loadingPlayer || saving} style={{ flex: 2, padding: "12px", borderRadius: 8, background: "var(--color-gold)", border: "none", color: "#0d1117", fontSize: 14, fontWeight: 700, cursor: loadingPlayer || saving ? "default" : "pointer", opacity: loadingPlayer || saving ? 0.6 : 1, transition: "opacity 0.15s" }}
-            onMouseEnter={(e) => { if (!loadingPlayer && !saving) e.currentTarget.style.opacity = "0.88"; }}
-            onMouseLeave={(e) => { if (!loadingPlayer && !saving) e.currentTarget.style.opacity = "1"; }}>
-            {loadingPlayer ? "Chargement…" : saving ? "Enregistrement…" : "Enregistrer"}
-          </button>
-        </div>
-      </div>
     </>
   );
 }
@@ -328,8 +292,8 @@ export function ProfilePage() {
     username: authUser?.username ?? "",
     email: authUser?.email ?? "",
   });
-  const [editOpen, setEditOpen] = useState(false);
   const addToast = useToastStore((state) => state.addToast);
+  const { openSidebar } = useSidebar();
   const winPctDraw = Math.round((draws / total) * 100);
   const lossPct = 100 - winPct - winPctDraw;
   const country = COUNTRIES.find((c) => c.code === user.countryCode);
@@ -347,7 +311,7 @@ export function ProfilePage() {
           email:       authUser.email ?? "",
           bio:         p.bio          ?? "",
           countryCode: p.country      ?? "FR",
-          color:       p.preferredColor ?? "Les deux",
+          color:       toProfileColor(p.preferredColor),
           elo:         p.elo,
           joinedYear:  new Date(p.createdAt).getFullYear(),
         });
@@ -405,7 +369,7 @@ export function ProfilePage() {
         email:       draft.email,
         bio:         updatedPlayer?.bio         ?? draft.bio,
         countryCode: updatedPlayer?.country     ?? draft.countryCode,
-        color:       updatedPlayer?.preferredColor ?? draft.color,
+        color:       toProfileColor(updatedPlayer?.preferredColor ?? draft.color),
         elo:         updatedPlayer?.elo         ?? draft.elo,
         joinedYear:  updatedPlayer ? new Date(updatedPlayer.createdAt).getFullYear() : draft.joinedYear,
       });
@@ -425,6 +389,23 @@ export function ProfilePage() {
     }
   };
 
+  const openEditSidebar = () => {
+    openSidebar(
+      EditSidebar,
+      { user, playerId: authUser?.id, onSave: handleSave },
+      {
+        title: "Modifier le profil",
+        description: "Les modifications sont sauvegardées sur votre compte.",
+        closeIcon: <CircleX size={18} />,
+        closeLabel: "Fermer la modification du profil",
+        width: 480,
+        zIndex: 300,
+        bodyClassName: "flex flex-col gap-5 p-7",
+        footerClassName: "flex gap-3 px-7 py-[18px]",
+      },
+    );
+  };
+
   return (
     <>
       <div style={{ maxWidth: 840, margin: "0 auto", padding: "48px 24px", width: "100%", boxSizing: "border-box" }}>
@@ -432,13 +413,12 @@ export function ProfilePage() {
         {/* Page header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.01em" }}>Profil</h1>
-          <button
-            onClick={() => setEditOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-transparent px-[18px] py-[9px] text-sm text-[var(--color-text-muted)] transition-[border-color,color] duration-150 hover:border-[rgba(201,169,110,0.4)] hover:text-[var(--color-gold)]"
-          >
-            <Pencil size={14} />
-            Modifier le profil
-          </button>
+          <Button
+            variant="profile-outline"
+            onClick={openEditSidebar}
+            icon={<Pencil size={14} />}
+            label="Modifier le profil"
+          />
         </div>
 
         {/* Hero */}
@@ -514,10 +494,6 @@ export function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {editOpen && (
-        <EditSidebar user={user} playerId={authUser?.id} onSave={handleSave} onClose={() => setEditOpen(false)} />
-      )}
     </>
   );
 }
