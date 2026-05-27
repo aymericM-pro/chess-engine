@@ -1,20 +1,20 @@
 import { createBrowserRouter } from "react-router";
 import App from "../App";
 import { ReplayPage } from "../modules/replay";
-import { SettingsPage } from "../modules/settings/SettingsPage";
-import { Board } from "../modules/game/Board";
-import { LivePage } from "../modules/live/LivePage";
-import { LandingPage } from "../modules/landing/LandingPage";
-import { HistoryPage } from "../modules/history/HistoryPage";
-import { PlayersPage } from "../modules/players/PlayersPage";
-import { FriendsPage } from "../modules/friends/FriendsPage";
-import { ProfilePage } from "../modules/profile/ProfilePage";
-import { PlayPage } from "../modules/play/PlayPage";
-import { LoginPage } from "../modules/auth/LoginPage";
-import { RegisterPage } from "../modules/auth/RegisterPage";
-import { ForgotPasswordPage } from "../modules/auth/ForgotPasswordPage";
-import { ResetPasswordPage } from "../modules/auth/ResetPasswordPage";
-import { RequireAuth, RequireGuest } from "../modules/auth/RequireAuth";
+import { SettingsPage } from "../modules/settings/views/SettingsPage";
+import { Board } from "../modules/game/views/Board";
+import { LivePage } from "../modules/live/views/LivePage";
+import { LandingPage } from "../modules/landing/views/LandingPage";
+import { HistoryPage } from "../modules/history/views/HistoryPage";
+import { PlayersPage } from "../modules/players/views/PlayersPage";
+import { FriendsPage } from "../modules/friends/views/FriendsPage";
+import { ProfilePage } from "../modules/profile/views/ProfilePage";
+import { PlayPage } from "../modules/play/views/PlayPage";
+import { LoginPage } from "../modules/auth/views/LoginPage";
+import { RegisterPage } from "../modules/auth/views/RegisterPage";
+import { ForgotPasswordPage } from "../modules/auth/views/ForgotPasswordPage";
+import { ResetPasswordPage } from "../modules/auth/views/ResetPasswordPage";
+import { RequireAuth, RequireGuest } from "../modules/auth/components/RequireAuth";
 
 export const router = createBrowserRouter([
   { path: "/login",           element: <RequireGuest><LoginPage /></RequireGuest> },

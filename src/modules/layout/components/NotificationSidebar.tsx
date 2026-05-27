@@ -1,7 +1,7 @@
 import { Bell, Check, CircleX, Loader2, UserCheck, UserRoundPlus } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
-import { useGameInviteStore, type FriendNotification, type GameInvite } from '@/modules/gameInvites/gameInviteStore'
+import { useGameInviteStore, type FriendNotification, type GameInvite } from '@/modules/gameInvites/store/gameInviteStore'
+import { useRouter } from '@/shared/services/router'
 import { gamesApi } from '@/shared/api/games.api'
 import { notificationsApi } from '@/shared/api/notifications.api'
 import { getErrorMessage } from '@/shared/api/errorMessage'
@@ -68,7 +68,7 @@ export function useOpenNotificationSidebar() {
 }
 
 function FriendNotificationItem({ notification, onClose }: { notification: FriendNotification; onClose: () => void }) {
-  const navigate = useNavigate()
+  const { goTo } = useRouter()
   const isRequest = notification.kind === 'friend.request'
   const accepted = notification.kind === 'friend.accepted'
   const Icon = isRequest ? UserRoundPlus : UserCheck
@@ -81,7 +81,7 @@ function FriendNotificationItem({ notification, onClose }: { notification: Frien
 
   const handleOpen = () => {
     onClose()
-    navigate('/friends')
+    goTo({ route: 'friends' })
   }
 
   return (
@@ -116,7 +116,7 @@ function FriendNotificationItem({ notification, onClose }: { notification: Frien
 
 function GameInviteItem({ invite, onClose }: { invite: GameInvite; onClose: () => void }) {
   const [accepting, setAccepting] = useState(false)
-  const navigate = useNavigate()
+  const { goTo } = useRouter()
   const removeInvite = useGameInviteStore((state) => state.removeInvite)
   const addToast = useToastStore((state) => state.addToast)
 
@@ -126,7 +126,7 @@ function GameInviteItem({ invite, onClose }: { invite: GameInvite; onClose: () =
       const game = await gamesApi.acceptInvite(invite.gameId)
       removeInvite(invite.gameId)
       onClose()
-      navigate(`/play?game=${game.id}`)
+      goTo({ route: 'play', gameId: game.id })
     } catch (err) {
       addToast({
         type: 'error',

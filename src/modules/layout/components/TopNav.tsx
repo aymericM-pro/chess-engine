@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Bell, LogOut, Settings, User, Sun, Moon } from "lucide-react";
 import { Button } from "@/shared/components/Button";
@@ -7,7 +7,9 @@ import { useOpenNotificationSidebar } from "./NotificationSidebar";
 import { useThemeStore } from "@/shared/theme/useThemeStore";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import { usePlayerStore } from "@/modules/players/store/playerStore";
-import { useGameInviteStore } from "@/modules/gameInvites/gameInviteStore";
+import { useGameInviteStore } from "@/modules/gameInvites/store/gameInviteStore";
+import { useRouter } from "@/shared/services/router";
+import { Route } from "@/shared/services/routes";
 
 export function TopNav() {
   const { t } = useTranslation();
@@ -21,7 +23,7 @@ export function TopNav() {
   const clearPlayer = usePlayerStore((state) => state.clearPlayer);
   const inviteCount = useGameInviteStore((state) => state.unreadCount);
   const clearInvites = useGameInviteStore((state) => state.clearInvites);
-  const navigate = useNavigate();
+  const { goTo } = useRouter();
   const openNotificationSidebar = useOpenNotificationSidebar();
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export function TopNav() {
     clearPlayer();
     clearInvites();
     logout();
-    navigate("/login", { replace: true });
+    goTo({ route: "login" }, { replace: true });
   };
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export function TopNav() {
         }}
       >
         {/* Logo */}
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        <Link to={Route.Home} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <div
             style={{
               width: 36,
@@ -105,12 +107,12 @@ export function TopNav() {
           {!token ? (
             <div className="flex items-center gap-2">
               <Button
-                to="/login"
+                to={Route.Login}
                 variant="nav-secondary"
                 label="Connexion"
               />
               <Button
-                to="/register"
+                to={Route.Register}
                 variant="nav-primary"
                 label="Inscription"
               />
@@ -165,8 +167,8 @@ export function TopNav() {
                     {/* Links */}
                     <div style={{ paddingTop: 4, paddingBottom: 4 }}>
                       {[
-                        { icon: <User size={13} />, label: "Profil", to: "/profile" },
-                        { icon: <Settings size={13} />, label: t("nav.settings"), to: "/settings" },
+                        { icon: <User size={13} />, label: "Profil", to: Route.Profile },
+                        { icon: <Settings size={13} />, label: t("nav.settings"), to: Route.Settings },
                       ].map(({ icon, label, to }) => (
                         <Button
                           key={to}

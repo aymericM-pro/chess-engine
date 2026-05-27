@@ -1,1 +1,1 @@
-export { ReplayPage } from './ReplayPage'
+export { ReplayPage } from './views/ReplayPage'

@@ -2,7 +2,7 @@ import { Outlet, useLocation } from 'react-router'
 import { TopNav } from './modules/layout/components/TopNav'
 import { PageBackground } from './modules/layout/components/PageBackground'
 import { MainSidebar } from './modules/layout/components/MainSidebar'
-import { GameInviteSocket } from './modules/gameInvites/GameInviteSocket'
+import { GameInviteSocket } from './modules/gameInvites/components/GameInviteSocket'
 import { SidebarProvider } from '@/shared/components/Sidebar'
 
 export default function App() {

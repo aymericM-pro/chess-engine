@@ -72,6 +72,56 @@ body {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Form design system ── */
+.form-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  display: block;
+  margin-bottom: 7px;
+  letter-spacing: 0.03em;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--color-bg-3);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.form-input:focus {
+  border-color: rgba(201, 169, 110, 0.5);
+}
+
+.form-input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.form-input[aria-invalid="true"]:focus {
+  border-color: var(--color-danger);
+}
+
+.form-input-wrapper {
+  position: relative;
+}
+
+.form-input-wrapper .form-input {
+  padding-right: 44px;
+}
+
+.form-error {
+  margin: 6px 0 0;
+  color: var(--color-danger);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .auth-shell {
   display: flex;
   min-height: 100vh;
