@@ -41,7 +41,7 @@ export function TopNav() {
     clearPlayer();
     clearInvites();
     logout();
-    goTo({ route: "login" }, { replace: true });
+    goTo(Route.Login, undefined, { replace: true });
   };
 
   useEffect(() => {

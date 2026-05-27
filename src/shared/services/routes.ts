@@ -1,0 +1,16 @@
+export enum Route {
+  Home           = "/",
+  Login          = "/login",
+  Register       = "/register",
+  ForgotPassword = "/forgot-password",
+  ResetPassword  = "/reset-password",
+  Replay         = "/replay",
+  Settings       = "/settings",
+  Board          = "/board",
+  Players        = "/players",
+  Friends        = "/friends",
+  Live           = "/live",
+  History        = "/history",
+  Profile        = "/profile",
+  Play           = "/play",
+}

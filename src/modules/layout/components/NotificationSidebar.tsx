@@ -81,7 +81,7 @@ function FriendNotificationItem({ notification, onClose }: { notification: Frien
 
   const handleOpen = () => {
     onClose()
-    goTo({ route: 'friends' })
+    goTo(Route.Friends)
   }
 
   return (
@@ -126,7 +126,7 @@ function GameInviteItem({ invite, onClose }: { invite: GameInvite; onClose: () =
       const game = await gamesApi.acceptInvite(invite.gameId)
       removeInvite(invite.gameId)
       onClose()
-      goTo({ route: 'play', gameId: game.id })
+      goTo(Route.Play, { game: game.id })
     } catch (err) {
       addToast({
         type: 'error',

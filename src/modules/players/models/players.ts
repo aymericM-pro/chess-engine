@@ -1,0 +1,138 @@
+export interface Player {
+  id: string;
+  username: string;
+  firstName: string;
+  name: string;
+  lastName: string;
+  elo: number;
+  country: string;
+  color: "white" | "black" | "both";
+  piece: string;
+  wins: number;
+  losses: number;
+  draws: number;
+  joinedYear: number;
+}
+
+export const PLAYERS: Player[] = [
+  {
+    id: "wynn4life",
+    username: "Wynn4Life",
+    name: "Wynn Laurent",
+    firstName: "Wynne",
+    lastName: "Laurent",
+    elo: 249,
+    country: "FR",
+    color: "white",
+    piece: "♔",
+    wins: 12,
+    losses: 8,
+    draws: 3,
+    joinedYear: 2024,
+  },
+  {
+    id: "votybe",
+    username: "Votybe",
+    name: "Victor Tybéron",
+    firstName: "Victor",
+    lastName: "Tybéron",
+    elo: 247,
+    country: "FR",
+    color: "black",
+    piece: "♚",
+    wins: 9,
+    losses: 11,
+    draws: 2,
+    joinedYear: 2024,
+  },
+  {
+    id: "grandmasterk",
+    username: "GrandmasterK",
+    name: "Klaus Reinholt",
+    firstName: "Klaus",
+    lastName: "Reinholt",
+    elo: 312,
+    country: "DE",
+    color: "both",
+    piece: "♕",
+    wins: 28,
+    losses: 5,
+    draws: 7,
+    joinedYear: 2022,
+  },
+  {
+    id: "pawnstorm88",
+    username: "PawnStorm88",
+    name: "Patrick Storms",
+    firstName: "Patrick",
+    lastName: "Storms",
+    elo: 251,
+    country: "GB",
+    color: "white",
+    piece: "♙",
+    wins: 15,
+    losses: 10,
+    draws: 5,
+    joinedYear: 2023,
+  },
+  {
+    id: "tactixbot",
+    username: "TactixBot",
+    name: "Takeshi Inoue",
+    firstName: "Takeshi",
+    lastName: "Inoue",
+    elo: 238,
+    country: "US",
+    color: "black",
+    piece: "♞",
+    wins: 7,
+    losses: 14,
+    draws: 1,
+    joinedYear: 2025,
+  },
+  {
+    id: "echesfr",
+    username: "EchecsFR",
+    name: "Élise Fontaine",
+    firstName: "Élise",
+    lastName: "Fontaine",
+    elo: 298,
+    country: "FR",
+    color: "both",
+    piece: "♝",
+    wins: 22,
+    losses: 7,
+    draws: 4,
+    joinedYear: 2023,
+  },
+  {
+    id: "silentrook",
+    username: "SilentRook",
+    name: "Sara Delgado",
+    firstName: "Sara",
+    lastName: "Delgado",
+    elo: 235,
+    country: "ES",
+    color: "black",
+    piece: "♜",
+    wins: 6,
+    losses: 12,
+    draws: 3,
+    joinedYear: 2025,
+  },
+  {
+    id: "queengambit99",
+    username: "QueenGambit99",
+    name: "Natasha Volkov",
+    firstName: "Natasha",
+    lastName: "Volkov",
+    elo: 334,
+    country: "RU",
+    color: "white",
+    piece: "♛",
+    wins: 35,
+    losses: 4,
+    draws: 9,
+    joinedYear: 2021,
+  },
+];
